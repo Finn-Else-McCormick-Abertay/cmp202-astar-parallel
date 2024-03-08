@@ -53,5 +53,6 @@
     <ClInclude Include="imgui\extensions\implot\implot_internal.h" />
     <ClInclude Include="imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="imgui\backends\imgui_impl_glfw.h" />
+    <ClInclude Include="src\Graph\GraphDisplay.h" />
   </ItemGroup>
 </Project>

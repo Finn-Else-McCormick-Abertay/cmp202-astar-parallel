@@ -16,7 +16,7 @@ public:
 
 	struct Edge {
 		int start, end; WeightType weight;
-		Edge(int start, int end, WeightType weight) : start(start), end(end), weight(weight) {}
+		Edge(int start, int end, WeightType weight = static_cast<WeightType>(1)) : start(start), end(end), weight(weight) {}
 	};
 
 	DirectedGraph(std::initializer_list<ValueType> values, std::initializer_list<Edge> edges) {
