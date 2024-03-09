@@ -30,6 +30,7 @@
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Window\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\backends\imgui_impl_glfw.h" />
@@ -44,6 +45,8 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\Graph\DirectedGraph.h" />
     <ClInclude Include="src\Graph\GraphDisplay.h" />
+    <ClInclude Include="src\Pathfinding\AStar.h" />
+    <ClInclude Include="src\Window\Window.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
