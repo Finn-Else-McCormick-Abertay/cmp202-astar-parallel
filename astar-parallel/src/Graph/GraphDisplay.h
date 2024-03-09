@@ -67,6 +67,11 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, std::functi
 
 				ImPlot::SetNextLineStyle(startInfo.color, weight);
 				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
+
+				ImPlot::PlotText(std::to_string(weight).c_str(),
+					startInfo.pos.x + ((endInfo.pos.x - startInfo.pos.x) * 0.3f),
+					startInfo.pos.y + ((endInfo.pos.y - startInfo.pos.y) * 0.3f)
+				);
 			}
 
 			ImPlot::PopStyleColor();
