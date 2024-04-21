@@ -38,6 +38,20 @@ std::string g_graphEdit_setEdge_message; bool g_graphEdit_setEdge_messageIsError
 bool g_showPathfindingSettingsMenu = false;
 int g_pathfindingStart = 0;
 int g_pathfindingEnd = 0;
+
+std::function<float(const Vec2&, const Vec2&)> g_pathfinding_heuristic_functions[] = {
+	[](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); },
+	[](const Vec2& val, const Vec2& goalVal) { return abs(val.x - goalVal.x) + abs(val.y - goalVal.y); }
+};
+const char* g_pathfinding_settings_heuristic_names[] = { "Straight Line Distance", "Manhattan Distance" };
+int g_pathfinding_settings_heuristic_currentIndex = 0;
+
+std::function<std::vector<int>(const DirectedGraph<Vec2, float>&, int, int, const std::function<float(const Vec2&, const Vec2&)>&)> g_pathfinding_algorithms[] = {
+	aStarSinglethreaded<Vec2,float>
+};
+const char* g_pathfinding_settings_algorithm_names[] = { "A* Single Threaded" };
+int g_pathfinding_settings_algorithm_currentIndex = 0;
+
 std::string g_pathfinding_message; bool g_pathfinding_messageIsError = false;
 
 void clearPath() {
@@ -45,7 +59,8 @@ void clearPath() {
 }
 
 bool findPath() {
-	g_path = aStarSinglethreaded<Vec2, float>(g_graph, g_pathfindingStart, g_pathfindingEnd, [](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); });
+	g_path = g_pathfinding_algorithms[g_pathfinding_settings_algorithm_currentIndex](
+		g_graph, g_pathfindingStart, g_pathfindingEnd, g_pathfinding_heuristic_functions[g_pathfinding_settings_heuristic_currentIndex]);
 	return g_path.size() > 0;
 }
 
@@ -56,6 +71,7 @@ float imguiTitlebar() {
 		if (ImGui::BeginMenu("Graph")) {
 			if (ImGui::MenuItem("Edit")) {
 				g_showGraphEditMenu = true;
+				ImGui::SetWindowFocus("Edit Graph");
 			}
 			if (ImGui::MenuItem("Reset")) {
 				g_graph = DirectedGraph<Vec2, float>();
@@ -66,6 +82,7 @@ float imguiTitlebar() {
 		if (ImGui::BeginMenu("Pathfinding")) {
 			if (ImGui::MenuItem("Settings")) {
 				g_showPathfindingSettingsMenu = true;
+				ImGui::SetWindowFocus("Pathfinding Settings");
 			}
 			ImGui::EndMenu();
 		}
@@ -211,11 +228,37 @@ void imguiUpdate(int width, int height) {
 	}
 
 	if (g_showPathfindingSettingsMenu) {
-		float popupWidth = 320, popupHeight = 290;
+		float popupWidth = 300, popupHeight = 130;
 		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		ImGui::Begin("Pathfinding Settings", &g_showPathfindingSettingsMenu, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		ImGui::Text("Algorithm");
+		if (ImGui::BeginCombo("##algorithmCombo", g_pathfinding_settings_algorithm_names[g_pathfinding_settings_algorithm_currentIndex])) {
+			for (int n = 0; n < IM_ARRAYSIZE(g_pathfinding_settings_algorithm_names); n++)
+			{
+				bool is_selected = (g_pathfinding_settings_algorithm_currentIndex == n);
+				if (ImGui::Selectable(g_pathfinding_settings_algorithm_names[n], is_selected)) {
+					g_pathfinding_settings_algorithm_currentIndex = n;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::Text("Heuristic");
+		if (ImGui::BeginCombo("##heuristicCombo", g_pathfinding_settings_heuristic_names[g_pathfinding_settings_heuristic_currentIndex])) {
+			for (int n = 0; n < IM_ARRAYSIZE(g_pathfinding_settings_heuristic_names); n++)
+			{
+				bool is_selected = (g_pathfinding_settings_heuristic_currentIndex == n);
+				if (ImGui::Selectable(g_pathfinding_settings_heuristic_names[n], is_selected)) {
+					g_pathfinding_settings_heuristic_currentIndex = n;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
