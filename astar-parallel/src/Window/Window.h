@@ -10,7 +10,7 @@ class Window
 public:
 	~Window();
 
-	static bool init(std::function<void()> imguiUpdate, int width = 640, int height = 480);
+	static bool init(std::function<void(int, int)> imguiUpdate, std::function<float()> imguiTitlebar, int width = 640, int height = 480);
 
 	static void enterLoop();
 
@@ -23,5 +23,6 @@ private:
 
 	GLFWwindow* m_window;
 	int m_windowWidth, m_windowHeight;
-	std::function<void()> m_imguiUpdate;
+	std::function<void(int,int)> m_imguiUpdate;
+	std::function<float()> m_imguiTitlebar;
 };

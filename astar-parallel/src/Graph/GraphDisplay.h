@@ -78,19 +78,20 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 				*/
 			}
 		}
+		if (path.size() > 0) {
+			for (int i = 0; i < path.size() - 1; ++i) {
+				int startIndex = path.at(i);
+				int endIndex = path.at(i + 1);
 
-		for (int i = 0; i < path.size() - 1; ++i) {
-			int startIndex = path.at(i);
-			int endIndex = path.at(i + 1);
+				auto& startInfo = info[startIndex];
+				auto& endInfo = info[endIndex];
 
-			auto& startInfo = info[startIndex];
-			auto& endInfo = info[endIndex];
+				float xs[2] = { startInfo.pos.x, endInfo.pos.x };
+				float ys[2] = { startInfo.pos.y, endInfo.pos.y };
 
-			float xs[2] = { startInfo.pos.x, endInfo.pos.x };
-			float ys[2] = { startInfo.pos.y, endInfo.pos.y };
-
-			ImPlot::SetNextLineStyle(color_lines_path, 1.5f);
-			ImPlot::PlotLine("##GraphLine", xs, ys, 2);
+				ImPlot::SetNextLineStyle(color_lines_path, 1.5f);
+				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
+			}
 		}
 
 		ImVec2 textOffset{2, 2};

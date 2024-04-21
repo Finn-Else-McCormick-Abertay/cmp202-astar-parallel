@@ -12,7 +12,7 @@ Window& Window::singleton() {
 	return *ptr;
 }
 
-bool Window::init(std::function<void()> imguiUpdate, int width, int height) {
+bool Window::init(std::function<void(int, int)> imguiUpdate, std::function<float()> imguiTitlebar, int width, int height) {
 	if (singleton().m_window != nullptr) { return false; }
 
 	if (!glfwInit()) {
@@ -32,6 +32,7 @@ bool Window::init(std::function<void()> imguiUpdate, int width, int height) {
 
 	glfwSetWindowSizeCallback(singleton().m_window, onResized);
 	singleton().m_imguiUpdate = std::function(imguiUpdate);
+	singleton().m_imguiTitlebar = std::function(imguiTitlebar);
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
@@ -67,20 +68,13 @@ void Window::render() {
 }
 
 void Window::update() {
-	float menuBarHeight = 0.f;
-	if (ImGui::BeginMainMenuBar()) {
-		menuBarHeight = ImGui::GetWindowHeight();
-		//if (ImGui::BeginMenu("File")) {
-		//	ImGui::EndMenu();
-		//}
-		ImGui::EndMainMenuBar();
-	}
+	float menuBarHeight = singleton().m_imguiTitlebar();
 
 	ImGui::SetNextWindowPos({ 0, menuBarHeight }, ImGuiCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(singleton().m_windowWidth, singleton().m_windowHeight - menuBarHeight), ImGuiCond_Always);
 	ImGui::Begin("MainWindow", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration);
 
-	singleton().m_imguiUpdate();
+	singleton().m_imguiUpdate(singleton().m_windowWidth, singleton().m_windowHeight);
 
 	ImGui::End();
 }
