@@ -8,10 +8,15 @@ template<class ValueType, class WeightType = int>
 class DirectedGraph
 {
 public:
-	struct Node {
-		ValueType value;
-		std::map<int, WeightType> adjacencyMap;
-		Node(const ValueType& value) : value(value) {}
+	class Node {
+	public:
+		Node(const ValueType& value) : m_value(value) {}
+		const ValueType& value() const { return m_value; }
+		const std::map<int, WeightType>& adjacencyMap() const { return m_adjacencyMap; }
+		void setEdgeWeight(int index, WeightType weight) { m_adjacencyMap.insert_or_assign(index, weight); }
+	private:
+		ValueType m_value;
+		std::map<int, WeightType> m_adjacencyMap;
 	};
 
 	struct Edge {
@@ -19,20 +24,28 @@ public:
 		Edge(int start, int end, WeightType weight = static_cast<WeightType>(1)) : start(start), end(end), weight(weight) {}
 	};
 
+	DirectedGraph() = default;
 	DirectedGraph(std::initializer_list<ValueType> values, std::initializer_list<Edge> edges) {
 		int nodeCount = values.size();
 		m_nodes.reserve(nodeCount);
-		for (const ValueType& value : values) { m_nodes.push_back(Node(value)); }
+		for (const ValueType& value : values) { createNode(value); }
 
 		for (const Edge& edge : edges) {
 			if (edge.start < 0 || edge.start >= nodeCount || edge.end < 0 || edge.end >= nodeCount) { throw std::out_of_range("Edge contains invalid indices."); }
-			m_nodes[edge.start].adjacencyMap.insert_or_assign(edge.end, edge.weight);
+			m_nodes[edge.start].setEdgeWeight(edge.end, edge.weight);
 		}
 	}
 
 	const Node& at(int index) const { return m_nodes.at(index); }
 
 	int nodeCount() const { return m_nodes.size(); }
+
+	int createNode(ValueType val) { m_nodes.push_back(Node(val)); return m_nodes.size(); }
+	void setEdgeWeight(int start, int end, WeightType weight, bool twoWay = false) {
+		if (start < 0 || start >= nodeCount() || end < 0 || end >= nodeCount()) { throw std::out_of_range("Edge contains invalid indices."); }
+		m_nodes[start].setEdgeWeight(end, weight);
+		if (twoWay) { m_nodes[end].setEdgeWeight(start, weight); }
+	}
 
 private:
 	std::vector<Node> m_nodes;

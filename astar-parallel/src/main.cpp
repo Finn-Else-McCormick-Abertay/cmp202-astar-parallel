@@ -5,27 +5,46 @@
 
 #include "Window/Window.h"
 
-DirectedGraph<NodeDisplayInfo, int>* g_graph = nullptr;
+#include "Pathfinding/AStar.h"
+#include <iostream>
+
+#include "Maths/Vec2.h"
+
+DirectedGraph<Vec2, float>* g_graph = nullptr;
+std::vector<int> path;
 
 void imguiUpdate() {
 	if (g_graph) {
-		DisplayGraph<NodeDisplayInfo,int>(*g_graph, [](NodeDisplayInfo val, int index){ return val; });
+		DisplayGraph<Vec2, float>(*g_graph, path,
+			[](const Vec2& val, const int& index){
+				NodeDisplayInfo info;
+				info.name = std::to_string(index);
+				info.pos.x = val.x; info.pos.y = val.y;
+				return info;
+			}
+		);
 	}
 }
 
 int main() {
-	DirectedGraph<NodeDisplayInfo, int> graph(
-		{
-		{"a",{0,0}},
-		{"b",{-1,-2}},
-		{"c",{1,-2}},
-		{"d",{-1,-4}},
-		{"e",{1,-4}},
-		{"f",{0,-6}}
-		},
-		{ {0,1},{1,5},{5,4},{4,1},{4,2},{2,3},{2,0},{2,5} }
-	);
+	DirectedGraph<Vec2, float> graph;
+	std::vector<Vec2> nodes = { {0,0}, {-1,-2}, {1,-2}, {-1,-4}, {1,-4}, {0,-6} };
+	for (auto& node : nodes) { graph.createNode(node); }
+
+	std::vector<std::pair<int,int>> edges = { {0,1},{1,5},{5,4},{4,1},{4,2},{2,3},{2,0},{2,5} };
+	for (auto& pair : edges) {
+		Vec2 pos1 = graph.at(pair.first).value();
+		Vec2 pos2 = graph.at(pair.second).value();
+		graph.setEdgeWeight(pair.first, pair.second, (pos2 - pos1).length(), true);
+	}
+	
 	g_graph = &graph;
+
+	path = aStarSinglethreaded<Vec2,float>(graph, 0, 4, [](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); });
+
+	for (auto& index : path) {
+		std::cout << index << " " << graph.at(index).value() << std::endl;
+	}
 
 	if (Window::init(imguiUpdate)) {
 		Window::enterLoop();
