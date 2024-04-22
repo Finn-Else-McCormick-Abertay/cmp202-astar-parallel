@@ -18,26 +18,27 @@ struct NodeDisplayInfo
 template<class ValueType, class WeightType = int>
 void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
 	
-	NodeDisplayInfo* info = new NodeDisplayInfo[graph.nodeCount()];
-	for (int i = 0; i < graph.nodeCount(); ++i) {
+	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
+
+	for (int i = 0; i < graph.size(); ++i) {
 		info[i] = GetNodeInfo(graph.at(i).value(), i);
 	}
 
-	if (ImGui::BeginTable("##adjacencyMatrix", graph.nodeCount() + 1)) {
+	if (ImGui::BeginTable("##adjacencyMatrix", graph.size() + 1)) {
 		ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
-		for (int i = 0; i < graph.nodeCount(); ++i) {
+		for (int i = 0; i < graph.size(); ++i) {
 			auto& nodeInfo = info[i];
 			ImGui::TableSetupColumn(nodeInfo.name.c_str(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
 		}
 		ImGui::TableHeadersRow();
 
-		for (int row = 0; row < graph.nodeCount(); ++row) {
+		for (int row = 0; row < graph.size(); ++row) {
 			auto& rowAdjacencyMap = graph.at(row).adjacencyMap();
 			auto& rowInfo = info[row];
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
 			ImGui::TableHeader(rowInfo.name.c_str());
-			for (int column = 0; column < graph.nodeCount(); ++column) {
+			for (int column = 0; column < graph.size(); ++column) {
 				ImGui::TableSetColumnIndex(column + 1);
 				if (rowAdjacencyMap.contains(column)) {
 					WeightType weight = rowAdjacencyMap.at(column);
@@ -57,7 +58,7 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 		ImPlot::SetupAxes(NULL, NULL, 0, 0);
 		ImPlot::SetupAxesLimits(-10, 10, -10, 10);
 
-		for (int startIndex = 0; startIndex < graph.nodeCount(); ++startIndex) {
+		for (int startIndex = 0; startIndex < graph.size(); ++startIndex) {
 			auto& startInfo = info[startIndex];
 			auto& adjacencyMap = graph.at(startIndex).adjacencyMap();
 
@@ -96,7 +97,7 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 
 		ImVec2 textOffset{2, 2};
 		ImPlot::PushStyleColor(ImPlotCol_InlayText, ImU32(color_labels));
-		for (int i = 0; i < graph.nodeCount(); ++i) {
+		for (int i = 0; i < graph.size(); ++i) {
 			auto& nodeInfo = info[i];
 			ImPlot::PlotText(nodeInfo.name.c_str(), nodeInfo.pos.x, nodeInfo.pos.y, textOffset);
 		}

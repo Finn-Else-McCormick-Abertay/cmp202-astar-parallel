@@ -4,56 +4,57 @@
 
 #include <functional>
 #include <queue>
-#include <map>
+#include <algorithm>
 
 template<class ValueType, class WeightType>
 std::vector<int> aStarSinglethreaded(
-	const DirectedGraph<ValueType,WeightType>& graph, int start, int goal, const std::function<WeightType(const ValueType& nodeVal, const ValueType& goalVal)>& h) {
+	const DirectedGraph<ValueType,WeightType>& graph, int start, int goal, const std::function<WeightType(const ValueType& nodeVal, const ValueType& goalVal)>& heuristicFunc) {
 
-	std::priority_queue<int, std::vector<int>, std::greater<int>> openSet;
+	auto h = [&](int index) { return heuristicFunc(graph.at(index).value(), graph.at(goal).value()); };
+
+	std::vector<WeightType> g, f, cameFrom;
+	// Init g and f values to INT_MAX (essentially infinity) so new values will always be less
+	g.reserve(graph.size()); f.reserve(graph.size()); cameFrom.reserve(graph.size());
+	for (int i = 0; i < graph.size(); ++i) { g.push_back(INT_MAX); f.push_back(INT_MAX); cameFrom.push_back(-1); }
+	g[start] = 0; f[start] = h(start);
+
+	auto lowest_f_compare = [&f](const int& lhs, const int& rhs) { return f.at(lhs) < f.at(rhs); };
+
+	// Opens set is represented by a priority queue ordered by lowest f score of index
+	std::priority_queue<int, std::vector<int>, decltype(lowest_f_compare)> openSet(lowest_f_compare);
 	openSet.push(start);
 
-	ValueType goalVal = graph.at(goal).value();
-
-	std::map<int, WeightType> g;
-	g[start] = 0;
-
-	std::map<int, WeightType> f;
-	f[start] = h(graph.at(start).value(), goalVal);
-
-	std::map<int, WeightType> cameFrom;
-
 	while (!openSet.empty()) {
+		// Node in the open set with lowest f score
 		int current = openSet.top();
+
+		// Goal found
 		if (current == goal) {
-			std::vector<int> reversePath;
+			// Reconstruct path from goal back to start
+			std::vector<int> path;
+			path.push_back(current);
 			int prev = current;
 			while (prev != start) {
-				reversePath.push_back(prev);
 				prev = cameFrom.at(prev);
+				path.push_back(prev);
 			}
-			reversePath.push_back(start);
-			std::vector<int> finalPath; finalPath.reserve(reversePath.size());
-			for (auto it = reversePath.cend(); it != reversePath.cbegin();) {
-				--it;
-				finalPath.push_back(*it);
-			}
-			return finalPath;
+			// Reverse so that it runs from start to goal
+			std::reverse(path.begin(),path.end());
+			return path;
 		}
 
+		// Remove current from open set
 		openSet.pop();
 		const std::map<int, WeightType>& adjacencyMap = graph.at(current).adjacencyMap();
 
+		// For each neighbour of current
 		for (auto& [neighbour, weight] : adjacencyMap) {
-			WeightType g_tentative = g.at(current) + weight;
-			bool replace = false;
-			if (!g.contains(neighbour)) { replace = true; }
-			else if (g_tentative < g.at(neighbour)) { replace = true; }
+			WeightType neighbour_g_tentative = g.at(current) + weight;
 
-			if (replace) {
+			if (neighbour_g_tentative < g.at(neighbour)) {
 				cameFrom[neighbour] = current;
-				g[neighbour] = g_tentative;
-				f[neighbour] = g_tentative + h(graph.at(neighbour).value(), goalVal);
+				g[neighbour] = neighbour_g_tentative;
+				f[neighbour] = neighbour_g_tentative + h(neighbour);
 				openSet.push(neighbour);
 			}
 		}

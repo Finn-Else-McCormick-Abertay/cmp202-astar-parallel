@@ -14,7 +14,7 @@ DirectedGraph<Vec2, float> g_graph;
 std::vector<int> g_path;
 
 void recalculateEdgeWeights() {
-	for (int i = 0; i < g_graph.nodeCount(); ++i) {
+	for (int i = 0; i < g_graph.size(); ++i) {
 		Vec2 pos1 = g_graph.at(i).value();
 		auto& map = g_graph.at(i).adjacencyMap();
 		for (auto& [j, weight] : map) {
@@ -134,7 +134,7 @@ void imguiUpdate(int width, int height) {
 			ImGui::SameLine();
 			if (ImGui::Button("Add", ImVec2(100, 20))) {
 				g_graph.createNode(Vec2(g_graphEdit_inputPosition[0], g_graphEdit_inputPosition[1]));
-				g_graphEdit_setNode_inputIndex = g_graph.nodeCount() - 1;
+				g_graphEdit_setNode_inputIndex = g_graph.size() - 1;
 				clearPath();
 				g_graphEdit_setNode_message = "Added node at index " + std::to_string(g_graphEdit_setNode_inputIndex);
 				g_graphEdit_setNode_messageIsError = false;
@@ -334,8 +334,6 @@ int main() {
 		Vec2 pos2 = g_graph.at(pair.second).value();
 		g_graph.setEdgeWeight(pair.first, pair.second, (pos2 - pos1).length(), true);
 	}
-
-	//g_path = aStarSinglethreaded<Vec2,float>(g_graph, 0, 4, [](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); });
 
 	if (Window::init(imguiUpdate, imguiTitlebar)) {
 		Window::enterLoop();

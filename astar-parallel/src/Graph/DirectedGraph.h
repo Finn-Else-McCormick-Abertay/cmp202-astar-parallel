@@ -42,17 +42,17 @@ public:
 	const Node& at(int index) const { return m_nodes.at(index); }
 	bool has(int index) const { return index >= 0 && index < m_nodes.size(); }
 
-	int nodeCount() const { return m_nodes.size(); }
+	int size() const { return m_nodes.size(); }
 
 	int createNode(ValueType val) { m_nodes.push_back(Node(val)); return m_nodes.size(); }
 	void setValue(int index, ValueType val) { m_nodes[index].setValue(val); }
 	void setEdgeWeight(int start, int end, WeightType weight, bool twoWay = false) {
-		if (start < 0 || start >= nodeCount() || end < 0 || end >= nodeCount()) { throw std::out_of_range("Edge contains invalid indices."); }
+		if (start < 0 || start >= size() || end < 0 || end >= size()) { throw std::out_of_range("Edge contains invalid indices."); }
 		m_nodes[start].setEdgeWeight(end, weight);
 		if (twoWay) { m_nodes[end].setEdgeWeight(start, weight); }
 	}
 	void removeEdge(int start, int end, bool twoWay = false) {
-		if (start < 0 || start >= nodeCount() || end < 0 || end >= nodeCount()) { throw std::out_of_range("Edge contains invalid indices."); }
+		if (start < 0 || start >= size() || end < 0 || end >= size()) { throw std::out_of_range("Edge contains invalid indices."); }
 		m_nodes[start].removeEdge(end);
 		if (twoWay) { m_nodes[end].removeEdge(start); }
 	}
