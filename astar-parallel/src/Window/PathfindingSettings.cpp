@@ -4,7 +4,8 @@
 #include "../../imgui/imgui.h"
 
 PathfindingSettings::PathfindingSettings() {
-	m_algorithms.emplace_back(aStarSinglethreaded<Vec2, float>, "A* Single Threaded");
+	m_algorithms.emplace_back(aStarSinglethreaded<Vec2, float>, "A* Sequential");
+	m_algorithms.emplace_back(hashDistributedAStarSharedMemory<Vec2, float>, "HDA* Parallel Shared Memory");
 
 	m_heuristics.emplace_back(
 		[](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); },
@@ -19,6 +20,11 @@ bool PathfindingSettings::findPath() {
 	Singleton::path() = m_algorithms[m_algorithmIndex].first(Singleton::graph(), m_startIndex, m_goalIndex, m_heuristics[m_heuristicIndex].first);
 	return Singleton::path().size() > 0;
 }
+
+void PathfindingSettings::setAlgorithm(int v) { m_algorithmIndex = v; }
+void PathfindingSettings::setHeuristic(int v) { m_heuristicIndex = v; }
+
+void PathfindingSettings::setIndices(int start, int goal) { m_startIndex = start; m_goalIndex = goal; }
 
 void PathfindingSettings::addMenuBarItem() {
 	if (ImGui::BeginMenu("Pathfinding")) {
@@ -43,7 +49,7 @@ void PathfindingSettings::imguiDrawWindow(int width, int height) {
 		for (int n = 0; n < m_algorithms.size(); n++)
 		{
 			bool is_selected = (m_algorithmIndex == n);
-			if (ImGui::Selectable(m_algorithms[m_algorithmIndex].second.c_str(), is_selected)) {
+			if (ImGui::Selectable(m_algorithms[n].second.c_str(), is_selected)) {
 				m_algorithmIndex = n;
 				if (is_selected)
 					ImGui::SetItemDefaultFocus();

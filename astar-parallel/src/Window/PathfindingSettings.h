@@ -16,6 +16,11 @@ public:
 
 	bool findPath();
 
+	void setAlgorithm(int);
+	void setHeuristic(int);
+
+	void setIndices(int, int);
+
 private:
 	bool m_show = false;
 	int m_startIndex = 0;

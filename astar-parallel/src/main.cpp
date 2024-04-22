@@ -42,6 +42,11 @@ void imguiUpdate(int width, int height) {
 int main() {
 	g_graphEdit.loadGraph("default");
 
+	g_pathfindingSettings.setAlgorithm(1);
+	g_pathfindingSettings.setIndices(0, 4);
+
+	g_pathfindingSettings.findPath();
+
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();
 	}
