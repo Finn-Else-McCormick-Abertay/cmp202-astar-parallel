@@ -18,10 +18,10 @@ std::vector<int> aStarSinglethreaded(
 	for (int i = 0; i < graph.size(); ++i) { g.push_back(INT_MAX); f.push_back(INT_MAX); cameFrom.push_back(-1); }
 	g[start] = 0; f[start] = h(start);
 
-	auto lowest_f_compare = [&f](const int& lhs, const int& rhs) { return f.at(lhs) < f.at(rhs); };
+	auto f_compare = [&f](const int& lhs, const int& rhs) { return f.at(lhs) > f.at(rhs); };
 
 	// Opens set is represented by a priority queue ordered by lowest f score of index
-	std::priority_queue<int, std::vector<int>, decltype(lowest_f_compare)> openSet(lowest_f_compare);
+	std::priority_queue<int, std::vector<int>, decltype(f_compare)> openSet(f_compare);
 	openSet.push(start);
 
 	while (!openSet.empty()) {
@@ -59,6 +59,19 @@ std::vector<int> aStarSinglethreaded(
 			}
 		}
 	}
+
+	// Failure
+	return std::vector<int>();
+}
+
+
+
+
+template<class ValueType, class WeightType>
+std::vector<int> aStarParallel(
+	const DirectedGraph<ValueType, WeightType>& graph, int start, int goal, const std::function<WeightType(const ValueType& nodeVal, const ValueType& goalVal)>& heuristicFunc) {
+
+	auto h = [&](int index) { return heuristicFunc(graph.at(index).value(), graph.at(goal).value()); };
 
 	// Failure
 	return std::vector<int>();
