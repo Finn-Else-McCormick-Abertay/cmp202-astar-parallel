@@ -6,6 +6,8 @@
 
 #include "../Graph/GraphJSON.h"
 
+#include "../Graph/GraphDisplay.h"
+
 void GraphEdit::saveGraph(std::string path) {
 	if (saveToFile(Singleton::graph(), path)) {
 		m_saveLoadMessage.first = "Saved to path " + std::string(m_inputSavePath);
@@ -71,12 +73,19 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		const char* label = (m_saveLoadDialogIsSave) ? "Save" : "Load";
 		ImGui::Begin(label, &m_showSaveLoadDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-		ImGui::SetNextItemWidth(180);
-		ImGui::InputText("##filepathInput", m_inputSavePath, IM_ARRAYSIZE(m_inputSavePath));
-		ImGui::PushID("##saveloadbutton");
-		if (ImGui::Button(label, ImVec2(100, 20))) {
+
+		auto buttonOrEnterPressed = [&]() {
 			if (m_saveLoadDialogIsSave) { saveGraph(std::string(m_inputSavePath)); }
 			else { loadGraph(std::string(m_inputSavePath)); }
+			};
+
+		ImGui::SetNextItemWidth(180);
+		if (ImGui::InputText("##filepathInput", m_inputSavePath, IM_ARRAYSIZE(m_inputSavePath), ImGuiInputTextFlags_EnterReturnsTrue)) {
+			buttonOrEnterPressed();
+		}
+		ImGui::PushID("##saveloadbutton");
+		if (ImGui::Button(label, ImVec2(100, 20))) {
+			buttonOrEnterPressed();
 		}
 		ImGui::PopID();
 		imguiMessage(m_saveLoadMessage);
@@ -214,4 +223,23 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
+}
+
+void GraphEdit::imguiDisplayGraph() {
+	auto getNodeInfo = [](const Vec2& val, const int& index) {
+		NodeDisplayInfo info;
+		info.name = std::to_string(index);
+		info.pos.x = val.x; info.pos.y = val.y;
+		return info;
+		};
+
+	if (m_showGraphAdjacencyTable) {
+		if (ImGui::Button("Hide Adjacency Matrix", ImVec2(200, 20))) { m_showGraphAdjacencyTable = false; }
+		DisplayAdjacencyTable<Vec2, float>(Singleton::graph(), Singleton::path(), getNodeInfo);
+	}
+	else {
+		if (ImGui::Button("Show Adjacency Matrix", ImVec2(200, 20))) { m_showGraphAdjacencyTable = true; }
+	}
+
+	DisplayGraph<Vec2, float>(Singleton::graph(), Singleton::path(), getNodeInfo);
 }

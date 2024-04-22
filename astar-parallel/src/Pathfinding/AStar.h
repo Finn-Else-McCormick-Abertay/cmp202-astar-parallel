@@ -5,6 +5,7 @@
 #include <functional>
 #include <queue>
 #include <algorithm>
+#include <thread>
 
 template<class ValueType, class WeightType>
 std::vector<int> aStarSinglethreaded(
@@ -65,13 +66,16 @@ std::vector<int> aStarSinglethreaded(
 }
 
 
-
+static int g_numThreads = std::thread::hardware_concurrency();
 
 template<class ValueType, class WeightType>
 std::vector<int> aStarParallel(
 	const DirectedGraph<ValueType, WeightType>& graph, int start, int goal, const std::function<WeightType(const ValueType& nodeVal, const ValueType& goalVal)>& heuristicFunc) {
 
 	auto h = [&](int index) { return heuristicFunc(graph.at(index).value(), graph.at(goal).value()); };
+
+	int numThreads = g_numThreads;
+
 
 	// Failure
 	return std::vector<int>();

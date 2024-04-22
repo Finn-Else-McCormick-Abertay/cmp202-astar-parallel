@@ -18,8 +18,8 @@ struct NodeDisplayInfo
 };
 
 template<class ValueType, class WeightType = int>
-void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
-	
+void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
+
 	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
 
 	for (int i = 0; i < graph.size(); ++i) {
@@ -51,15 +51,30 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 		ImGui::EndTable();
 	}
 
+	delete[] info;
+}
+
+template<class ValueType, class WeightType = int>
+void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
+	
+	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
+
+	for (int i = 0; i < graph.size(); ++i) {
+		info[i] = GetNodeInfo(graph.at(i).value(), i);
+	}
+
 	ImColor color_labels = ImColor(1.f, 1.f, 1.f, 1.f);
 	ImColor color_points = ImColor(0.5f, 0.5f, 0.5f, 1.f);
 	ImColor color_lines_base = ImColor(0.7f, 0.7f, 0.7f, 1.f);
 	ImColor color_lines_path = ImColor(1.f, 0.2f, 0.2f, 1.f);
 
 	float arrowLinePosition = 0.7f;
-	float arrowSize = 6.f;
 
-	auto drawArrow = [arrowLinePosition, arrowSize](ImVec2 start, ImVec2 end, ImColor color) {
+	float lineThickness = 1.5f; float pointSize = 8.f;
+	float pathLineThickness = 2.5f; float pathPointSize = 10.f;
+	float arrowSize = 6.f; float pathArrowSize = 7.5f;
+
+	auto drawArrow = [arrowLinePosition, arrowSize](ImVec2 start, ImVec2 end, ImColor color, float size) {
 		Vec2 startPoint = Vec2(ImPlot::PlotToPixels(start.x, start.y)), endPoint = Vec2(ImPlot::PlotToPixels(end.x, end.y));
 
 		Vec2 drawPoint = startPoint + arrowLinePosition * (endPoint - startPoint);
@@ -78,9 +93,9 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 			);
 			};
 
-		Vec2 arrow_p1 = drawPoint + rotate(Vec2(arrowSize / 2.f, arrowSize / 2.f), lineHeadingAngle);
-		Vec2 arrow_p2 = drawPoint + rotate(Vec2(0.f, -arrowSize), lineHeadingAngle);
-		Vec2 arrow_p3 = drawPoint + rotate(Vec2(-arrowSize / 2.f, arrowSize / 2.f), lineHeadingAngle);
+		Vec2 arrow_p1 = drawPoint + rotate(Vec2(size / 2.f, size / 2.f), lineHeadingAngle);
+		Vec2 arrow_p2 = drawPoint + rotate(Vec2(0.f, -size), lineHeadingAngle);
+		Vec2 arrow_p3 = drawPoint + rotate(Vec2(-size / 2.f, size / 2.f), lineHeadingAngle);
 
 		ImDrawList* drawList = ImPlot::GetPlotDrawList();
 		drawList->AddTriangleFilled(arrow_p1.asImVec2(), arrow_p2.asImVec2(), arrow_p3.asImVec2(), color);
@@ -101,11 +116,11 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 				float xs[2] = { startInfo.pos.x, endInfo.pos.x };
 				float ys[2] = { startInfo.pos.y, endInfo.pos.y };
 
-				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 8.f, color_points);
-				ImPlot::SetNextLineStyle(color_lines_base, 1.f);
+				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, pointSize, color_points);
+				ImPlot::SetNextLineStyle(color_lines_base, lineThickness);
 				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
 
-				drawArrow(startInfo.pos, endInfo.pos, color_points);
+				drawArrow(startInfo.pos, endInfo.pos, color_lines_base, arrowSize);
 			}
 		}
 		if (path.size() > 0) {
@@ -119,11 +134,11 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 				float xs[2] = { startInfo.pos.x, endInfo.pos.x };
 				float ys[2] = { startInfo.pos.y, endInfo.pos.y };
 
-				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, 8.f, color_lines_path);
-				ImPlot::SetNextLineStyle(color_lines_path, 1.5f);
+				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, pathPointSize, color_lines_path);
+				ImPlot::SetNextLineStyle(color_lines_path, pathLineThickness);
 				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
 
-				drawArrow(startInfo.pos, endInfo.pos, color_lines_path);
+				drawArrow(startInfo.pos, endInfo.pos, color_lines_path, pathArrowSize);
 			}
 		}
 

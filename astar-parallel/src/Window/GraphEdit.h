@@ -9,6 +9,8 @@ public:
 	void addMenuBarItem();
 	void imguiDrawWindow(int width, int height);
 
+	void imguiDisplayGraph();
+
 	void saveGraph(std::string path);
 	void loadGraph(std::string path);
 
@@ -30,4 +32,6 @@ private:
 	std::pair<std::string, bool> m_saveLoadMessage;
 
 	void imguiMessage(const std::pair<std::string, bool>&);
+
+	bool m_showGraphAdjacencyTable = false;
 };
