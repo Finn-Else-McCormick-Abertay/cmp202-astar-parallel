@@ -45,7 +45,7 @@ int main() {
 	g_pathfindingSettings.setAlgorithm(1);
 	g_pathfindingSettings.setIndices(0, 4);
 
-	g_pathfindingSettings.findPath();
+	//g_pathfindingSettings.findPath();
 
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();

@@ -23,6 +23,7 @@ void GraphEdit::loadGraph(std::string path) {
 	auto [newGraph, valid] = loadFromFile<Vec2, float>(path);
 	if (valid) {
 		Singleton::graph() = newGraph;
+		Singleton::path() = std::vector<int>();
 		m_saveLoadMessage.first = "Loaded from path " + std::string(m_inputSavePath);
 		m_saveLoadMessage.second = false;
 	}

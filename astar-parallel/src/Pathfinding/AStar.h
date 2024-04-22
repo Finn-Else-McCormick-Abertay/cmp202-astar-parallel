@@ -152,20 +152,30 @@ std::vector<int> hashDistributedAStarSharedMemory(
 					current = protectedOpenSet.set.top();
 					protectedOpenSet.set.pop();
 				}
-				
+
+				WeightType current_g;
+				{
+					auto gLock = std::lock_guard(g[current].mutex);
+					current_g = g.at(current).weight;
+				}
+
 				const std::map<int, WeightType>& adjacencyMap = graph.at(current).adjacencyMap();
-				auto gLock = std::lock_guard(g[current].mutex);
 
 				// For each neighbour of current
 				for (auto& [neighbour, weight] : adjacencyMap) {
-					auto neighbourGLock = std::lock_guard(g[neighbour].mutex);
-					auto cameFromLock = std::lock_guard(cameFrom[neighbour].mutex);
-
-					WeightType neighbour_g_tentative = g.at(current).weight + weight;
-
-					if (neighbour_g_tentative < g.at(neighbour).weight) {
-						cameFrom[neighbour].index = current;
-						g[neighbour].weight = neighbour_g_tentative;
+					WeightType neighbour_g_tentative = current_g + weight;
+					bool shouldPush = false;
+					{
+						auto neighbourGLock = std::lock_guard(g[neighbour].mutex);
+						if (neighbour_g_tentative < g.at(neighbour).weight) {
+							auto cameFromLock = std::lock_guard(cameFrom[neighbour].mutex);
+							cameFrom[neighbour].index = current;
+							g[neighbour].weight = neighbour_g_tentative;
+							shouldPush = true;
+						}
+					}
+					// Seperated out so locks release before attempting to push
+					if (shouldPush) {
 						pushToOwnerOpenSet(neighbour);
 					}
 				}
