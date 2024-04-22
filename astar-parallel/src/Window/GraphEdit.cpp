@@ -7,6 +7,17 @@
 #include "../Graph/GraphJSON.h"
 
 #include "../Graph/GraphDisplay.h"
+#include "../Graph/GenerateGraph.h"
+
+GraphEdit::GraphEdit() {
+	m_heuristics.emplace_back(
+		[](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); },
+		"Straight Line Distance");
+	m_heuristics.emplace_back(
+		[](const Vec2& val, const Vec2& goalVal) { return abs(val.x - goalVal.x) + abs(val.y - goalVal.y); },
+		"Manhattan Distance"
+	);
+}
 
 void GraphEdit::saveGraph(std::string path) {
 	if (saveToFile(Singleton::graph(), path)) {
@@ -33,6 +44,14 @@ void GraphEdit::loadGraph(std::string path) {
 	}
 }
 
+void GraphEdit::generateGraph() {
+	Singleton::graph() = GenerateKNearest(m_generate_numNodes, m_generate_k,
+		Vec2(m_generate_lowerBound[0], m_generate_lowerBound[1]), Vec2(m_generate_upperBound[0], m_generate_upperBound[1]),
+		m_heuristics[m_heuristicIndex].first, m_generate_doubleEdged);
+	Singleton::recalculateEdgeWeights();
+	Singleton::path() = std::vector<int>();
+}
+
 void GraphEdit::addMenuBarItem() {
 	if (ImGui::BeginMenu("Graph")) {
 		if (ImGui::MenuItem("Edit")) {
@@ -42,6 +61,10 @@ void GraphEdit::addMenuBarItem() {
 		if (ImGui::MenuItem("Reset")) {
 			Singleton::graph() = DirectedGraph<Vec2, float>();
 			Singleton::path() = std::vector<int>();
+		}
+		if (ImGui::MenuItem("Generate")) {
+			m_showGenerateDialog = true;
+			ImGui::SetWindowFocus("Generate Graph");
 		}
 		if (ImGui::MenuItem("Save")) {
 			if (!m_saveLoadDialogIsSave) { m_saveLoadMessage.first = ""; }
@@ -91,6 +114,42 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		}
 		ImGui::PopID();
 		imguiMessage(m_saveLoadMessage);
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
+
+	if (m_showGenerateDialog) {
+		float popupWidth = 350, popupHeight = 195;
+		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+		ImGui::Begin("Generate Graph", &m_showGenerateDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		float comboWidth = 330;
+
+		ImGui::InputInt("Number of nodes", &m_generate_numNodes);
+		ImGui::InputInt("Edges per node", &m_generate_k);
+		ImGui::PushID("##generate_doubleEdged");
+		ImGui::Checkbox("Double Edged",&m_generate_doubleEdged);
+		ImGui::PopID();
+		ImGui::InputFloat2("Lower Bound", m_generate_lowerBound);
+		ImGui::InputFloat2("Upper Bound", m_generate_upperBound);
+
+		ImGui::SetNextItemWidth(comboWidth);
+		if (ImGui::BeginCombo("##heuristicCombo", m_heuristics[m_heuristicIndex].second.c_str())) {
+			for (int n = 0; n < m_heuristics.size(); n++)
+			{
+				bool is_selected = (m_heuristicIndex == n);
+				if (ImGui::Selectable(m_heuristics[n].second.c_str(), is_selected)) {
+					m_heuristicIndex = n;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+
+		if (ImGui::Button("Generate", ImVec2(100, 20))) { generateGraph(); }
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}

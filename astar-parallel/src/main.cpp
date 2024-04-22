@@ -35,6 +35,7 @@ void imguiUpdate(int width, int height) {
 
 int main() {
 	//g_graphEdit.loadGraph("default");
+	//Singleton::graph() = GenerateKNearest(30, 5, Vec2(-100, -100), Vec2(100, 100), [](const Vec2& v1, const Vec2& v2) { return (v2 - v1).length(); });
 
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();

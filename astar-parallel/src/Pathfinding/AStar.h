@@ -70,7 +70,7 @@ std::vector<int> aStarSinglethreaded(
 }
 
 
-static int g_numThreads = -1;
+static int g_numThreads = std::thread::hardware_concurrency();
 
 template<class ValueType, class WeightType>
 std::vector<int> hashDistributedAStarSharedMemory(

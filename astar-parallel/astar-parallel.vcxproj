@@ -49,6 +49,7 @@
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\Graph\DirectedGraph.h" />
+    <ClInclude Include="src\Graph\GenerateGraph.h" />
     <ClInclude Include="src\Graph\GraphDisplay.h" />
     <ClInclude Include="src\Graph\GraphJSON.h" />
     <ClInclude Include="src\Pathfinding\AStar.h" />

@@ -39,7 +39,7 @@ void PathfindingSettings::addMenuBarItem() {
 void PathfindingSettings::imguiDrawWindow(int width, int height) {
 	if (!m_show) { return; }
 
-	float popupWidth = 300, popupHeight = 130;
+	float popupWidth = 300, popupHeight = 140;
 	ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
@@ -73,6 +73,9 @@ void PathfindingSettings::imguiDrawWindow(int width, int height) {
 		}
 		ImGui::EndCombo();
 	}
+	if (m_algorithmIndex == 0) { ImGui::BeginDisabled(); }
+	ImGui::InputInt("Threads", &g_numThreads);
+	if (m_algorithmIndex == 0) { ImGui::EndDisabled(); }
 	ImGui::End();
 	ImGui::PopStyleVar();
 }

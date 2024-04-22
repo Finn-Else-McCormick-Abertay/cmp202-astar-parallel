@@ -2,10 +2,13 @@
 
 #include "../Maths/Vec2.h"
 #include "../Graph/DirectedGraph.h"
+#include <functional>
 
 class GraphEdit
 {
 public:
+	GraphEdit();
+
 	void addMenuBarItem();
 	void imguiDrawWindow(int width, int height);
 
@@ -34,4 +37,17 @@ private:
 	void imguiMessage(const std::pair<std::string, bool>&);
 
 	bool m_showGraphAdjacencyTable = false;
+
+
+	bool m_showGenerateDialog = false;
+	int m_generate_numNodes = 30;
+	int m_generate_k = 5;
+	bool m_generate_doubleEdged = false;
+	float m_generate_lowerBound[2] = { -100.f, -100.f };
+	float m_generate_upperBound[2] = { 100.f, 100.f };
+
+	std::vector<std::pair<std::function<float(const Vec2&, const Vec2&)>, std::string>> m_heuristics;
+	int m_heuristicIndex = 0;
+
+	void generateGraph();
 };

@@ -31,5 +31,5 @@ private:
 	int m_heuristicIndex = 0;
 
 	std::vector<std::pair<std::function<std::vector<int>(const DirectedGraph<Vec2,float>&,int,int,const std::function<float(const Vec2&,const Vec2&)>&)>, std::string>> m_algorithms;
-	int m_algorithmIndex = 0;
+	int m_algorithmIndex = 1;
 };

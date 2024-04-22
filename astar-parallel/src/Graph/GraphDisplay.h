@@ -104,7 +104,7 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 	if (ImPlot::BeginPlot("##Graph", ImVec2(-1, -1), ImPlotFlags_NoFrame)) {
 
 		ImPlot::SetupAxes(NULL, NULL, 0, 0);
-		ImPlot::SetupAxesLimits(-10, 10, -10, 10);
+		ImPlot::SetupAxesLimits(-100, 100, -100, 100);
 
 		for (int startIndex = 0; startIndex < graph.size(); ++startIndex) {
 			auto& startInfo = info[startIndex];
