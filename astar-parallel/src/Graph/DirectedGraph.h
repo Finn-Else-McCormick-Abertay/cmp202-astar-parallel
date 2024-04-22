@@ -28,15 +28,9 @@ public:
 	};
 
 	DirectedGraph() = default;
-	DirectedGraph(std::initializer_list<ValueType> values, std::initializer_list<Edge> edges) {
-		int nodeCount = values.size();
-		m_nodes.reserve(nodeCount);
-		for (const ValueType& value : values) { createNode(value); }
-
-		for (const Edge& edge : edges) {
-			if (edge.start < 0 || edge.start >= nodeCount || edge.end < 0 || edge.end >= nodeCount) { throw std::out_of_range("Edge contains invalid indices."); }
-			m_nodes[edge.start].setEdgeWeight(edge.end, edge.weight);
-		}
+	DirectedGraph(std::initializer_list<ValueType> values, std::initializer_list<Edge> edges, bool twoWayEdges = false) {
+		m_nodes.reserve(values.size()); for (const ValueType& value : values) { createNode(value); }
+		for (const Edge& edge : edges) { setEdgeWeight(edge.start, edge.end, edge.weight, twoWayEdges); }
 	}
 
 	const Node& at(int index) const { return m_nodes.at(index); }

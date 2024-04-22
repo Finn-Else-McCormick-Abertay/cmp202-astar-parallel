@@ -335,7 +335,7 @@ int main() {
 		g_graph.setEdgeWeight(pair.first, pair.second, (pos2 - pos1).length(), true);
 	}
 
-	if (Window::init(imguiUpdate, imguiTitlebar)) {
+	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();
 	}
 }
