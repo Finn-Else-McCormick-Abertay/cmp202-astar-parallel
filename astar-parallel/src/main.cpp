@@ -1,15 +1,11 @@
 #include "Graph/DirectedGraph.h"
 #include "Graph/GraphDisplay.h"
 
-#include <vector>
-
 #include "Window/Window.h"
 #include "Window/GraphEdit.h"
 #include "Window/PathfindingSettings.h"
 
 #include "Pathfinding/AStar.h"
-#include <iostream>
-
 #include "Maths/Vec2.h"
 
 #include "Singleton.h"
@@ -26,12 +22,10 @@ float imguiTitlebar() {
 		g_pathfindingSettings.addMenuBarItem();
 		ImGui::EndMainMenuBar();
 	}
-
 	return menuBarHeight;
 }
 
 void imguiUpdate(int width, int height) {
-
 	g_graphEdit.imguiDrawWindow(width, height);
 	g_pathfindingSettings.imguiDrawWindow(width, height);
 
@@ -40,12 +34,7 @@ void imguiUpdate(int width, int height) {
 }
 
 int main() {
-	g_graphEdit.loadGraph("default");
-
-	g_pathfindingSettings.setAlgorithm(1);
-	g_pathfindingSettings.setIndices(0, 4);
-
-	//g_pathfindingSettings.findPath();
+	//g_graphEdit.loadGraph("default");
 
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();

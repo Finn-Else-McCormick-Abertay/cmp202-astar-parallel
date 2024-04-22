@@ -84,6 +84,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		if (ImGui::InputText("##filepathInput", m_inputSavePath, IM_ARRAYSIZE(m_inputSavePath), ImGuiInputTextFlags_EnterReturnsTrue)) {
 			buttonOrEnterPressed();
 		}
+		if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) { ImGui::SetKeyboardFocusHere(-1); }
 		ImGui::PushID("##saveloadbutton");
 		if (ImGui::Button(label, ImVec2(100, 20))) {
 			buttonOrEnterPressed();

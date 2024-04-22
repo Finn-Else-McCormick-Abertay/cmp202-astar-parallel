@@ -72,7 +72,7 @@ void Window::update() {
 
 	ImGui::SetNextWindowPos({ 0, menuBarHeight }, ImGuiCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(singleton().m_windowWidth, singleton().m_windowHeight - menuBarHeight), ImGuiCond_Always);
-	ImGui::Begin("MainWindow", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration);
+	ImGui::Begin("MainWindow", NULL, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration);
 
 	singleton().m_imguiUpdate(singleton().m_windowWidth, singleton().m_windowHeight);
 

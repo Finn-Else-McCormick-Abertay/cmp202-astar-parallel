@@ -44,7 +44,9 @@ void PathfindingSettings::imguiDrawWindow(int width, int height) {
 	ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 	ImGui::Begin("Pathfinding Settings", &m_show, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+	float comboWidth = 280;
 	ImGui::Text("Algorithm");
+	ImGui::SetNextItemWidth(comboWidth);
 	if (ImGui::BeginCombo("##algorithmCombo", m_algorithms[m_algorithmIndex].second.c_str())) {
 		for (int n = 0; n < m_algorithms.size(); n++)
 		{
@@ -58,6 +60,7 @@ void PathfindingSettings::imguiDrawWindow(int width, int height) {
 		ImGui::EndCombo();
 	}
 	ImGui::Text("Heuristic");
+	ImGui::SetNextItemWidth(comboWidth);
 	if (ImGui::BeginCombo("##heuristicCombo", m_heuristics[m_heuristicIndex].second.c_str())) {
 		for (int n = 0; n < m_heuristics.size(); n++)
 		{
