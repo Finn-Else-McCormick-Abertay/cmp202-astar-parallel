@@ -46,6 +46,18 @@
     <ClCompile Include="src\Maths\Vec2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Graph\GraphJSON.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Window\GraphEdit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Singleton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Window\PathfindingSettings.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Graph\DirectedGraph.h" />
@@ -63,5 +75,9 @@
     <ClInclude Include="src\Pathfinding\AStar.h" />
     <ClInclude Include="src\Window\Window.h" />
     <ClInclude Include="src\Maths\Vec2.h" />
+    <ClInclude Include="src\Graph\GraphJSON.h" />
+    <ClInclude Include="src\Window\GraphEdit.h" />
+    <ClInclude Include="src\Singleton.h" />
+    <ClInclude Include="src\Window\PathfindingSettings.h" />
   </ItemGroup>
 </Project>
