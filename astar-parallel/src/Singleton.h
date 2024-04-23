@@ -10,6 +10,8 @@ public:
 
 	static void recalculateEdgeWeights();
 
+	static bool& currentlyProfiling();
+
 private:
 	Singleton() = default;
 
@@ -17,4 +19,6 @@ private:
 
 	DirectedGraph<Vec2, float> m_graph;
 	std::vector<int> m_path;
+
+	bool m_currentlyProfiling = false;
 };

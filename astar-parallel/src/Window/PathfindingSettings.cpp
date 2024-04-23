@@ -29,55 +29,74 @@ void PathfindingSettings::setIndices(int start, int goal) { m_startIndex = start
 void PathfindingSettings::addMenuBarItem() {
 	if (ImGui::BeginMenu("Pathfinding")) {
 		if (ImGui::MenuItem("Settings")) {
-			m_show = true;
+			m_showSettingsDialog = true;
 			ImGui::SetWindowFocus("Pathfinding Settings");
+		}
+		if (ImGui::MenuItem("Profiling")) {
+			m_showProfilingDialog = true;
+			ImGui::SetWindowFocus("Profiling");
 		}
 		ImGui::EndMenu();
 	}
 }
 
 void PathfindingSettings::imguiDrawWindow(int width, int height) {
-	if (!m_show) { return; }
+	if (m_showSettingsDialog) {
+		float popupWidth = 300, popupHeight = 140;
+		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+		ImGui::Begin("Pathfinding Settings", &m_showSettingsDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
+		float comboWidth = 280;
+		ImGui::Text("Algorithm");
+		ImGui::SetNextItemWidth(comboWidth);
+		if (ImGui::BeginCombo("##algorithmCombo", m_algorithms[m_algorithmIndex].second.c_str())) {
+			for (int n = 0; n < m_algorithms.size(); n++)
+			{
+				bool is_selected = (m_algorithmIndex == n);
+				if (ImGui::Selectable(m_algorithms[n].second.c_str(), is_selected)) {
+					m_algorithmIndex = n;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::Text("Heuristic");
+		ImGui::SetNextItemWidth(comboWidth);
+		if (ImGui::BeginCombo("##heuristicCombo", m_heuristics[m_heuristicIndex].second.c_str())) {
+			for (int n = 0; n < m_heuristics.size(); n++)
+			{
+				bool is_selected = (m_heuristicIndex == n);
+				if (ImGui::Selectable(m_heuristics[n].second.c_str(), is_selected)) {
+					m_heuristicIndex = n;
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		if (m_algorithmIndex == 0) { ImGui::BeginDisabled(); }
+		ImGui::InputInt("Threads", &g_numThreads);
+		if (m_algorithmIndex == 0) { ImGui::EndDisabled(); }
+		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
-	float popupWidth = 300, popupHeight = 140;
-	ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
-	ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-	ImGui::Begin("Pathfinding Settings", &m_show, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-	float comboWidth = 280;
-	ImGui::Text("Algorithm");
-	ImGui::SetNextItemWidth(comboWidth);
-	if (ImGui::BeginCombo("##algorithmCombo", m_algorithms[m_algorithmIndex].second.c_str())) {
-		for (int n = 0; n < m_algorithms.size(); n++)
-		{
-			bool is_selected = (m_algorithmIndex == n);
-			if (ImGui::Selectable(m_algorithms[n].second.c_str(), is_selected)) {
-				m_algorithmIndex = n;
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
+	if (m_showProfilingDialog) {
+		float popupWidth = 300, popupHeight = 140;
+		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+		ImGui::Begin("Profiling", &m_showProfilingDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		if (ImGui::Button("Begin", ImVec2(100, 20))) {
+			Singleton::currentlyProfiling() = true;
 		}
-		ImGui::EndCombo();
+		ImGui::End();
+		ImGui::PopStyleVar();
 	}
-	ImGui::Text("Heuristic");
-	ImGui::SetNextItemWidth(comboWidth);
-	if (ImGui::BeginCombo("##heuristicCombo", m_heuristics[m_heuristicIndex].second.c_str())) {
-		for (int n = 0; n < m_heuristics.size(); n++)
-		{
-			bool is_selected = (m_heuristicIndex == n);
-			if (ImGui::Selectable(m_heuristics[n].second.c_str(), is_selected)) {
-				m_heuristicIndex = n;
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
-		}
-		ImGui::EndCombo();
-	}
-	if (m_algorithmIndex == 0) { ImGui::BeginDisabled(); }
-	ImGui::InputInt("Threads", &g_numThreads);
-	if (m_algorithmIndex == 0) { ImGui::EndDisabled(); }
-	ImGui::End();
-	ImGui::PopStyleVar();
 }
 
 void PathfindingSettings::imguiDrawControlGroup() {

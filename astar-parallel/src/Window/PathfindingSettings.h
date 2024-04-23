@@ -22,7 +22,7 @@ public:
 	void setIndices(int, int);
 
 private:
-	bool m_show = false;
+	bool m_showSettingsDialog = false;
 	int m_startIndex = 0;
 	int m_goalIndex = 0;
 	std::pair<std::string, bool> m_groupMessage;
@@ -32,4 +32,6 @@ private:
 
 	std::vector<std::pair<std::function<std::vector<int>(const DirectedGraph<Vec2,float>&,int,int,const std::function<float(const Vec2&,const Vec2&)>&)>, std::string>> m_algorithms;
 	int m_algorithmIndex = 1;
+
+	bool m_showProfilingDialog = false;
 };

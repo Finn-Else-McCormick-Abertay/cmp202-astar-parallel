@@ -15,6 +15,10 @@ std::vector<int>& Singleton::path() {
 	return GetInstance().m_path;
 }
 
+bool& Singleton::currentlyProfiling() {
+	return GetInstance().m_currentlyProfiling;
+}
+
 void Singleton::recalculateEdgeWeights() {
 	auto& g = graph();
 	for (int i = 0; i < g.size(); ++i) {

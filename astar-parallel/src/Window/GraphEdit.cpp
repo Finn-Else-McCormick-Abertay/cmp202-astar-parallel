@@ -97,6 +97,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		const char* label = (m_saveLoadDialogIsSave) ? "Save" : "Load";
 		ImGui::Begin(label, &m_showSaveLoadDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
 
 		auto buttonOrEnterPressed = [&]() {
 			if (m_saveLoadDialogIsSave) { saveGraph(std::string(m_inputSavePath)); }
@@ -107,13 +108,15 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		if (ImGui::InputText("##filepathInput", m_inputSavePath, IM_ARRAYSIZE(m_inputSavePath), ImGuiInputTextFlags_EnterReturnsTrue)) {
 			buttonOrEnterPressed();
 		}
-		if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)) { ImGui::SetKeyboardFocusHere(-1); }
+		if (ImGui::IsWindowFocused() && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0) && !Singleton::currentlyProfiling()) { ImGui::SetKeyboardFocusHere(-1); }
 		ImGui::PushID("##saveloadbutton");
 		if (ImGui::Button(label, ImVec2(100, 20))) {
 			buttonOrEnterPressed();
 		}
 		ImGui::PopID();
 		imguiMessage(m_saveLoadMessage);
+
+		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
@@ -124,6 +127,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		ImGui::Begin("Generate Graph", &m_showGenerateDialog, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
 		float comboWidth = 330;
 
 		ImGui::InputInt("Number of nodes", &m_generate_numNodes);
@@ -150,6 +154,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 
 		if (ImGui::Button("Generate", ImVec2(100, 20))) { generateGraph(); }
 
+		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
@@ -160,6 +165,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		ImGui::Begin("Edit Graph", &m_show, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
 		ImGui::Text("Add or Edit Node");
 		ImGui::Separator();
 		{
@@ -281,6 +287,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 			imguiMessage(m_setEdge_message);
 		}
 
+		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
