@@ -13,7 +13,6 @@
 static GraphEdit g_graphEdit;
 static PathfindingSettings g_pathfindingSettings;
 
-
 float imguiTitlebar() {
 	float menuBarHeight = 0.f;
 	if (ImGui::BeginMainMenuBar()) {
@@ -34,10 +33,9 @@ void imguiUpdate(int width, int height) {
 }
 
 int main() {
-	//g_graphEdit.loadGraph("default");
-	//Singleton::graph() = GenerateKNearest(30, 5, Vec2(-100, -100), Vec2(100, 100), [](const Vec2& v1, const Vec2& v2) { return (v2 - v1).length(); });
+	g_graphEdit.generateGraph();
 
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
 		Window::enterLoop();
 	}
-}
+}	

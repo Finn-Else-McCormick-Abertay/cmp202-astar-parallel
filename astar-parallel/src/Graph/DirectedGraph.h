@@ -36,7 +36,7 @@ public:
 	const Node& at(int index) const { return m_nodes.at(index); }
 	bool has(int index) const { return index >= 0 && index < m_nodes.size(); }
 
-	int size() const { return m_nodes.size(); }
+	size_t size() const { return m_nodes.size(); }
 
 	int createNode(ValueType val) { m_nodes.push_back(Node(val)); return m_nodes.size(); }
 	void setValue(int index, ValueType val) { m_nodes[index].setValue(val); }

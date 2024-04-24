@@ -4,6 +4,9 @@
 #include "../Graph/DirectedGraph.h"
 #include <functional>
 
+#include "../Pathfinding/Prototypes.h"
+#include "ImGuiUtil.h"
+
 class GraphEdit
 {
 public:
@@ -16,25 +19,24 @@ public:
 
 	void saveGraph(std::string path);
 	void loadGraph(std::string path);
+	void generateGraph();
 
 private:
 	bool m_show = false;
 
 	int m_setNode_index = 0;
 	float m_setNode_inputPosition[2] = { 0.f,0.f };
-	std::pair<std::string, bool> m_setNode_message;
+	OutputMessage m_setNode_message;
 
 	int m_setEdge_startIndex = 0;
 	int m_setEdge_endIndex = 0;
 	bool m_setEdge_doubleEdge = true;
-	std::pair<std::string, bool> m_setEdge_message;
+	OutputMessage m_setEdge_message;
 
 	bool m_showSaveLoadDialog = false;
 	bool m_saveLoadDialogIsSave = true;
 	char m_inputSavePath[256];
-	std::pair<std::string, bool> m_saveLoadMessage;
-
-	void imguiMessage(const std::pair<std::string, bool>&);
+	OutputMessage m_saveLoadMessage;
 
 	bool m_showGraphAdjacencyTable = false;
 
@@ -46,8 +48,6 @@ private:
 	float m_generate_lowerBound[2] = { -100.f, -100.f };
 	float m_generate_upperBound[2] = { 100.f, 100.f };
 
-	std::vector<std::pair<std::function<float(const Vec2&, const Vec2&)>, std::string>> m_heuristics;
+	std::vector<std::pair<Heuristic<Vec2,float>, std::string>> m_heuristics;
 	int m_heuristicIndex = 0;
-
-	void generateGraph();
 };

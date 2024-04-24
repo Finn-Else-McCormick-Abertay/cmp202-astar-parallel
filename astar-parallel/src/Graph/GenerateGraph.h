@@ -6,8 +6,10 @@
 #include <random>
 #include <queue>
 
+#include "../Pathfinding/Heuristics.h"
+
 template<class distribution = std::uniform_real_distribution<float>>
-DirectedGraph<Vec2, float> GenerateKNearest(int numNodes, int k, Vec2 min, Vec2 max, const std::function<float(const Vec2&, const Vec2&)>& distanceFunc, bool doubleEdged = false) {
+DirectedGraph<Vec2, float> GenerateKNearest(int numNodes, int k, Vec2 min, Vec2 max, const Heuristic<Vec2,float>& distanceFunc, bool doubleEdged = false) {
 	DirectedGraph<Vec2, float> graph;
 
 	std::random_device rd;  // Will be used to obtain a seed for the random number engine

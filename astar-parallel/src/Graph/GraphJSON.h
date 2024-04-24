@@ -50,24 +50,23 @@ void from_json(const json& j, DirectedGraph<ValueType, WeightType>& graph) {
 
 
 template<class ValueType, class WeightType>
-bool saveToFile(const DirectedGraph<ValueType, WeightType>& graph, std::string path) {
+std::filesystem::path saveToFile(const DirectedGraph<ValueType, WeightType>& graph, std::string path) {
 	std::filesystem::path filepath = std::filesystem::path(path).replace_extension("json");
 	std::ofstream file(filepath);
 	if (file.is_open()) {
 		json data = graph;
 		file << data;
-		return true;
 	}
-	return false;
+	return filepath;
 }
 
 template<class ValueType, class WeightType>
-std::pair<DirectedGraph<ValueType, WeightType>, bool> loadFromFile(std::string path) {
+std::pair<DirectedGraph<ValueType, WeightType>, std::filesystem::path> loadFromFile(std::string path) {
 	std::filesystem::path filepath = std::filesystem::path(path).replace_extension("json");
 	std::ifstream file(filepath);
 	if (file.is_open()) {
 		json data = json::parse(file);
-		return std::make_pair(data.get<DirectedGraph<ValueType, WeightType>>(), true);
+		return std::make_pair(data.get<DirectedGraph<ValueType, WeightType>>(), filepath);
 	}
-	return std::make_pair(DirectedGraph<ValueType, WeightType>(), false);
+	return std::make_pair(DirectedGraph<ValueType, WeightType>(), filepath);
 }

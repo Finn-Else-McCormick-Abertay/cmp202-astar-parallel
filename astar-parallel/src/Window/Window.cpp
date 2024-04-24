@@ -5,7 +5,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
-#include <iostream>
+#include "../Singleton.h"
 
 Window& Window::singleton() {
 	static std::unique_ptr<Window> ptr = std::make_unique<Window>();
@@ -16,9 +16,10 @@ bool Window::init(std::function<void(int, int)> imguiUpdate, std::function<float
 	if (singleton().m_window != nullptr) { return false; }
 
 	if (!glfwInit()) {
-		std::cout << "GLFW failed to initialise." << std::endl;
+		Singleton::consoleOutput("GLFW failed to initialise.");
 		return false;
 	}
+	Singleton::consoleOutput("Initialised GLFW.");
 
 	singleton().m_windowWidth = width;
 	singleton().m_windowHeight = height;
@@ -43,6 +44,8 @@ bool Window::init(std::function<void(int, int)> imguiUpdate, std::function<float
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(singleton().m_window, true);
 	ImGui_ImplOpenGL3_Init();
+
+	Singleton::consoleOutput("Initialised ImGui and ImPlot.");
 
 	auto& style = ImGui::GetStyle();
 	ImGui::StyleColorsLight(&style);

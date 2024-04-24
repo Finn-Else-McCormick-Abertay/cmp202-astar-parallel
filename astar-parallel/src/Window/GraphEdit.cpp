@@ -9,39 +9,28 @@
 #include "../Graph/GraphDisplay.h"
 #include "../Graph/GenerateGraph.h"
 
+#include "../Pathfinding/Heuristics.h"
+
 GraphEdit::GraphEdit() {
-	m_heuristics.emplace_back(
-		[](const Vec2& val, const Vec2& goalVal) { return (val - goalVal).length(); },
-		"Straight Line Distance");
-	m_heuristics.emplace_back(
-		[](const Vec2& val, const Vec2& goalVal) { return abs(val.x - goalVal.x) + abs(val.y - goalVal.y); },
-		"Manhattan Distance"
-	);
+	m_heuristics.emplace_back(straightLineDistance, "Straight Line Distance");
+	m_heuristics.emplace_back(manhattanDistance, "Manhattan Distance");
 }
 
 void GraphEdit::saveGraph(std::string path) {
-	if (saveToFile(Singleton::graph(), path)) {
-		m_saveLoadMessage.first = "Saved to path " + std::string(m_inputSavePath);
-		m_saveLoadMessage.second = false;
-	}
-	else {
-		m_saveLoadMessage.first = "Failed to save to path " + std::string(m_inputSavePath);
-		m_saveLoadMessage.second = true;
-	}
+	auto resultingPath = saveToFile(Singleton::graph(), path);
+	m_saveLoadMessage.setMessage("Saved to " + resultingPath.generic_string());
+	Singleton::consoleOutput("Saved graph to file at local path ", resultingPath);
 }
 
 void GraphEdit::loadGraph(std::string path) {
-	auto [newGraph, valid] = loadFromFile<Vec2, float>(path);
-	if (valid) {
-		Singleton::graph() = newGraph;
-		Singleton::path() = std::vector<int>();
-		m_saveLoadMessage.first = "Loaded from path " + std::string(m_inputSavePath);
-		m_saveLoadMessage.second = false;
+	auto [loadedGraph, resultingPath] = loadFromFile<Vec2, float>(path);
+	if (loadedGraph.size() != 0) {
+		Singleton::graph() = loadedGraph;
+		Singleton::path() = Path();
+		m_saveLoadMessage.setMessage("Loaded from " + resultingPath.generic_string());
+		Singleton::consoleOutput("Loaded graph from file at local path ", resultingPath);
 	}
-	else {
-		m_saveLoadMessage.first = "No such file " + std::string(m_inputSavePath);
-		m_saveLoadMessage.second = true;
-	}
+	else { m_saveLoadMessage.setMessage("No such file " + resultingPath.generic_string(), true); }
 }
 
 void GraphEdit::generateGraph() {
@@ -49,7 +38,9 @@ void GraphEdit::generateGraph() {
 		Vec2(m_generate_lowerBound[0], m_generate_lowerBound[1]), Vec2(m_generate_upperBound[0], m_generate_upperBound[1]),
 		m_heuristics[m_heuristicIndex].first, m_generate_doubleEdged);
 	Singleton::recalculateEdgeWeights();
-	Singleton::path() = std::vector<int>();
+	Singleton::path() = Path();
+	Singleton::consoleOutput("Generated ", (m_generate_doubleEdged ? " double-edged " : ""), "k-nearest graph with size=",
+		m_generate_numNodes, " and k=", m_generate_k, " using heuristic ", m_heuristics.at(m_heuristicIndex).second, ".");
 }
 
 void GraphEdit::addMenuBarItem() {
@@ -58,33 +49,24 @@ void GraphEdit::addMenuBarItem() {
 			m_show = true;
 			ImGui::SetWindowFocus("Edit Graph");
 		}
-		if (ImGui::MenuItem("Reset")) {
-			Singleton::graph() = DirectedGraph<Vec2, float>();
-			Singleton::path() = std::vector<int>();
-		}
 		if (ImGui::MenuItem("Generate")) {
 			m_showGenerateDialog = true;
 			ImGui::SetWindowFocus("Generate Graph");
 		}
 		if (ImGui::MenuItem("Save")) {
-			if (!m_saveLoadDialogIsSave) { m_saveLoadMessage.first = ""; }
+			if (!m_saveLoadDialogIsSave) { m_saveLoadMessage.clear(); }
 			m_showSaveLoadDialog = true;
 			m_saveLoadDialogIsSave = true;
 			ImGui::SetWindowFocus("Save");
 		}
 		if (ImGui::MenuItem("Load")) {
-			if (m_saveLoadDialogIsSave) { m_saveLoadMessage.first = ""; }
+			if (m_saveLoadDialogIsSave) { m_saveLoadMessage.clear(); }
 			m_showSaveLoadDialog = true;
 			m_saveLoadDialogIsSave = false;
 			ImGui::SetWindowFocus("Load");
 		}
 		ImGui::EndMenu();
 	}
-}
-
-void GraphEdit::imguiMessage(const std::pair<std::string, bool>& message) {
-	ImColor textColor = message.second ? ImColor(1.f, 0.1f, 0.1f) : ImColor(0.f, 0.8f, 0.2f);
-	ImGui::TextColored(textColor, "%s", message.first.c_str());
 }
 
 void GraphEdit::imguiDrawWindow(int width, int height) {
@@ -114,7 +96,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 			buttonOrEnterPressed();
 		}
 		ImGui::PopID();
-		imguiMessage(m_saveLoadMessage);
+		m_saveLoadMessage.draw();
 
 		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }
 		ImGui::End();
@@ -160,12 +142,20 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 	}
 
 	if (m_show) {
-		float popupWidth = 320, popupHeight = 290;
+		float popupWidth = 320, popupHeight = 320;
 		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
 		ImGui::Begin("Edit Graph", &m_show, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
+
+		if (ImGui::Button("Reset Graph", ImVec2(300, 20))) {
+			Singleton::graph() = DirectedGraph<Vec2, float>(); Singleton::path() = Path();
+			m_setNode_message.clear();
+			m_setEdge_message.clear();
+		}
+		ImGui::SetItemTooltip("Remove all nodes and edges.");
+
 		ImGui::Text("Add or Edit Node");
 		ImGui::Separator();
 		{
@@ -174,13 +164,12 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 					auto& node = graph.at(m_setNode_index);
 					m_setNode_inputPosition[0] = node.value().x;
 					m_setNode_inputPosition[1] = node.value().y;
-					m_setNode_message.first = "";
+					m_setNode_message.clear();
 				}
 				else {
 					m_setNode_inputPosition[0] = 0.f;
 					m_setNode_inputPosition[1] = 0.f;
-					m_setNode_message.first = "Invalid index";
-					m_setNode_message.second = true;
+					m_setNode_message.setMessage("Invalid index", true);
 				}
 			}
 			ImGui::InputFloat2("Position", m_setNode_inputPosition);
@@ -189,12 +178,10 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 					graph.setValue(m_setNode_index, Vec2(m_setNode_inputPosition[0], m_setNode_inputPosition[1]));
 					Singleton::recalculateEdgeWeights();
 					Singleton::path().clear();
-					m_setNode_message.first = "Set position of node " + std::to_string(m_setNode_index);
-					m_setNode_message.second = false;
+					m_setNode_message.setMessage("Set position of node " + std::to_string(m_setNode_index));
 				}
 				else {
-					m_setNode_message.first = "Invalid index, could not set";
-					m_setNode_message.second = true;
+					m_setNode_message.setMessage("Invalid index, could not set", true);
 				}
 			}
 			ImGui::SameLine();
@@ -202,32 +189,21 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 				graph.createNode(Vec2(m_setNode_inputPosition[0], m_setNode_inputPosition[1]));
 				m_setNode_index = graph.size() - 1;
 				Singleton::path().clear();
-				m_setNode_message.first = "Added node at index " + std::to_string(m_setNode_index);
-				m_setNode_message.second = false;
+				m_setNode_message.setMessage("Added node at index " + std::to_string(m_setNode_index));
 			}
-			imguiMessage(m_setNode_message);
+			m_setNode_message.draw();
 		}
 		ImGui::NewLine();
 		ImGui::Text("Add or Edit Edge");
 		ImGui::Separator();
 		{
 			if (ImGui::InputInt("Start Index", &m_setEdge_startIndex)) {
-				if (graph.has(m_setEdge_startIndex)) {
-					m_setEdge_message.first = "";
-				}
-				else {
-					m_setEdge_message.first = "Invalid index";
-					m_setEdge_message.second = true;
-				}
+				if (graph.has(m_setEdge_startIndex)) { m_setEdge_message.clear(); }
+				else { m_setEdge_message.setMessage("Invalid index", true); }
 			}
 			if (ImGui::InputInt("End Index", &m_setEdge_endIndex)) {
-				if (graph.has(m_setEdge_endIndex)) {
-					m_setEdge_message.first = "";
-				}
-				else {
-					m_setEdge_message.first = "Invalid index";
-					m_setEdge_message.second = true;
-				}
+				if (graph.has(m_setEdge_endIndex)) { m_setEdge_message.clear(); }
+				else { m_setEdge_message.setMessage("Invalid index", true); }
 			}
 			ImGui::Checkbox("Both Ways", &m_setEdge_doubleEdge);
 			ImGui::PushID("set_edge");
@@ -238,24 +214,17 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 						Singleton::recalculateEdgeWeights();
 						Singleton::path().clear();
 						if (m_setEdge_doubleEdge) {
-							m_setEdge_message.first = "Created edges between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex);
+							m_setEdge_message.setMessage("Created edges between nodes "
+								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
 						}
 						else {
-							m_setEdge_message.first = "Created directed edge between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex);
+							m_setEdge_message.setMessage("Created directed edge between nodes "
+								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
 						}
-						m_setEdge_message.second = false;
 					}
-					else {
-						m_setEdge_message.first = "Start and end indicies are the same";
-						m_setEdge_message.second = true;
-					}
+					else { m_setEdge_message.setMessage("Start and end indicies are the same", true); }
 				}
-				else {
-					m_setEdge_message.first = "Invalid index, could not set";
-					m_setEdge_message.second = true;
-				}
+				else { m_setEdge_message.setMessage("Invalid index, could not set", true); }
 			}
 			ImGui::PopID();
 			ImGui::SameLine();
@@ -265,26 +234,19 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 						graph.removeEdge(m_setEdge_startIndex, m_setEdge_endIndex, m_setEdge_doubleEdge);
 						Singleton::path().clear();
 						if (m_setEdge_doubleEdge) {
-							m_setEdge_message.first = "Removed edges between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex);
+							m_setEdge_message.setMessage("Removed edges between nodes "
+								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
 						}
 						else {
-							m_setEdge_message.first = "Removed directed edge between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex);
+							m_setEdge_message.setMessage("Removed directed edge between nodes "
+								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
 						}
-						m_setEdge_message.second = false;
 					}
-					else {
-						m_setEdge_message.first = "Start and end indicies are the same";
-						m_setEdge_message.second = true;
-					}
+					else { m_setEdge_message.setMessage("Start and end indicies are the same", true); }
 				}
-				else {
-					m_setEdge_message.first = "Invalid index, could not remove";
-					m_setEdge_message.second = true;
-				}
+				else { m_setEdge_message.setMessage("Invalid index, could not remove", true); }
 			}
-			imguiMessage(m_setEdge_message);
+			m_setEdge_message.draw();
 		}
 
 		if (Singleton::currentlyProfiling()) { ImGui::EndDisabled(); }

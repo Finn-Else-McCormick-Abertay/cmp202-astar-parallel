@@ -11,7 +11,7 @@ DirectedGraph<Vec2, float>& Singleton::graph() {
 	return GetInstance().m_graph;
 }
 
-std::vector<int>& Singleton::path() {
+Path& Singleton::path() {
 	return GetInstance().m_path;
 }
 
