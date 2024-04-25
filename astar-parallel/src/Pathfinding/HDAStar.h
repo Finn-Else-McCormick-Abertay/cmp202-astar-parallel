@@ -135,11 +135,13 @@ Path hashDistributedAStarSharedMemory(const DirectedGraph<Value, Weight>& graph,
 	// Reconstruct path from goal back to start
 	Path path; path.push_back(goal);
 	int prev = goal;
+	int numPassed = 0;
 	while (prev != start) {
-		// Fail state (no path found)
-		if (prev == -1) { return Path(); }
+		// Fail state
+		if (prev == -1 || numPassed > graph.size()) { return Path(); }
 		prev = parentIndex.at(prev).get();
 		path.push_back(prev);
+		++numPassed;
 	}
 	// Reverse so that it runs from start to goal
 	std::reverse(path.begin(), path.end());

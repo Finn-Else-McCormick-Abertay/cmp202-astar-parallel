@@ -6,6 +6,7 @@
 
 #include "../Pathfinding/Prototypes.h"
 #include "ImGuiUtil.h"
+#include "../Graph/GraphDisplay.h"
 
 class GraphEdit
 {
@@ -22,7 +23,7 @@ public:
 	void generateGraph();
 
 private:
-	bool m_show = false;
+	bool m_showEditWindow = false;
 
 	int m_setNode_index = 0;
 	float m_setNode_inputPosition[2] = { 0.f,0.f };
@@ -38,7 +39,7 @@ private:
 	char m_inputSavePath[256];
 	OutputMessage m_saveLoadMessage;
 
-	bool m_showGraphAdjacencyTable = false;
+	bool m_showGraphAdjacencyTableWindow = false;
 
 
 	bool m_showGenerateDialog = false;
@@ -50,4 +51,6 @@ private:
 
 	std::vector<std::pair<Heuristic<Vec2,float>, std::string>> m_heuristics;
 	int m_heuristicIndex = 0;
+
+	static NodeDisplayInfo getNodeInfo(const Vec2& val, const int& index);
 };

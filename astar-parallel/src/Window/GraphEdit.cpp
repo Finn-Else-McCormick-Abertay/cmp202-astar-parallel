@@ -34,6 +34,13 @@ void GraphEdit::loadGraph(std::string path) {
 	else { m_saveLoadMessage.setMessage("No such file " + resultingPath.generic_string(), true); }
 }
 
+NodeDisplayInfo GraphEdit::getNodeInfo(const Vec2& val, const int& index) {
+	NodeDisplayInfo info;
+	info.name = std::to_string(index);
+	info.pos.x = val.x; info.pos.y = val.y;
+	return info;
+}
+
 void GraphEdit::generateGraph() {
 	Singleton::graph() = GenerateKNearest(m_generate_numNodes, m_generate_k,
 		Vec2(m_generate_lowerBound[0], m_generate_lowerBound[1]), Vec2(m_generate_upperBound[0], m_generate_upperBound[1]),
@@ -46,8 +53,12 @@ void GraphEdit::generateGraph() {
 
 void GraphEdit::addMenuBarItem() {
 	if (ImGui::BeginMenu("Graph")) {
+		if (ImGui::MenuItem("Show Adjacency Matrix")) {
+			m_showGraphAdjacencyTableWindow = true;
+			ImGui::SetWindowFocus("Adjacency Matrix");
+		}
 		if (ImGui::MenuItem("Edit")) {
-			m_show = true;
+			m_showEditWindow = true;
 			ImGui::SetWindowFocus("Edit Graph");
 		}
 		if (ImGui::MenuItem("Generate")) {
@@ -72,6 +83,17 @@ void GraphEdit::addMenuBarItem() {
 
 void GraphEdit::imguiDrawWindow(int width, int height) {
 	auto& graph = Singleton::graph();
+
+	if (m_showGraphAdjacencyTableWindow) {
+		float popupWidth = 500, popupHeight = 500;
+		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
+		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
+		ImGui::Begin("Adjacency Matrix", &m_showGraphAdjacencyTableWindow);
+		DisplayAdjacencyTable<Vec2, float>(Singleton::graph(), Singleton::path(), GetNodeInfoFunc<Vec2>(getNodeInfo));
+		ImGui::End();
+		ImGui::PopStyleVar();
+	}
 
 	if (m_showSaveLoadDialog) {
 		float popupWidth = 200, popupHeight = 100;
@@ -142,12 +164,12 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 		ImGui::PopStyleVar();
 	}
 
-	if (m_show) {
+	if (m_showEditWindow) {
 		float popupWidth = 320, popupHeight = 320;
 		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);
-		ImGui::Begin("Edit Graph", &m_show, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		ImGui::Begin("Edit Graph", &m_showEditWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 		if (Singleton::currentlyProfiling()) { ImGui::BeginDisabled(); }
 
 		if (ImGui::Button("Reset Graph", ImVec2(300, 20))) {
@@ -253,20 +275,5 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 }
 
 void GraphEdit::imguiDisplayGraph() {
-	auto getNodeInfo = [](const Vec2& val, const int& index) {
-		NodeDisplayInfo info;
-		info.name = std::to_string(index);
-		info.pos.x = val.x; info.pos.y = val.y;
-		return info;
-		};
-
-	if (m_showGraphAdjacencyTable) {
-		if (ImGui::Button("Hide Adjacency Matrix", ImVec2(200, 20))) { m_showGraphAdjacencyTable = false; }
-		DisplayAdjacencyTable<Vec2, float>(Singleton::graph(), Singleton::path(), getNodeInfo);
-	}
-	else {
-		if (ImGui::Button("Show Adjacency Matrix", ImVec2(200, 20))) { m_showGraphAdjacencyTable = true; }
-	}
-
-	DisplayGraph<Vec2, float>(Singleton::graph(), Singleton::path(), getNodeInfo);
+	DisplayGraph<Vec2, float>(Singleton::graph(), Singleton::path(), GetNodeInfoFunc<Vec2>(getNodeInfo));
 }

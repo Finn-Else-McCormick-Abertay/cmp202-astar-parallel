@@ -21,8 +21,11 @@ struct NodeDisplayInfo
 	NodeDisplayInfo() = default;
 };
 
-template<class ValueType, class WeightType = int>
-void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
+template<typename Value>
+using GetNodeInfoFunc = std::function<NodeDisplayInfo(const Value&, const int&)>;
+
+template<class Value, class Weight = int>
+void DisplayAdjacencyTable(const DirectedGraph<Value, Weight>& graph, const std::vector<int>& path, const GetNodeInfoFunc<Value>& GetNodeInfo) {
 
 	int* heatmapValues = new int[graph.size() * graph.size()];
 	for (int i = 0; i < graph.size(); ++i) { for (int j = 0; j < graph.size(); ++j) { heatmapValues[i + j * graph.size()] = 0; } }
@@ -37,17 +40,16 @@ void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, co
 		}
 	}
 
-
 	static ImU32 colormapValues[] = { ImColor(1.f,1.f,1.f), ImColor(0.5f,0.5f,0.5f) };
 	static ImPlotColormap colormap = ImPlot::AddColormap("##adjacencyColormap", colormapValues, IM_ARRAYSIZE(colormapValues), false);
 
 	ImPlot::PushColormap(colormap);
 	
-	if (ImPlot::BeginPlot("##adjacencyMatrix", ImVec2(-1, 0), ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText | ImPlotFlags_NoFrame)) {
+	if (ImPlot::BeginPlot("##adjacencyMatrix", ImVec2(-1, -1), ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText | ImPlotFlags_NoFrame)) {
 		ImPlotAxisFlags axisFlags = ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoHighlight;
 		ImPlot::SetupAxes(NULL,NULL, axisFlags | ImPlotAxisFlags_Opposite, axisFlags | ImPlotAxisFlags_Invert);
 		ImPlotPoint boundsMin = ImPlotPoint(0, 0), boundsMax = ImPlotPoint(graph.size(), graph.size());
-		ImPlot::SetupAxesLimits(boundsMin.x, boundsMax.x, boundsMin.y, boundsMax.y);
+		ImPlot::SetupAxesLimits(boundsMin.x, boundsMax.x, boundsMin.y, boundsMax.y, ImPlotCond_Always);
 		ImPlot::SetupAxisFormat(ImAxis_X1, "%.f");
 		ImPlot::SetupAxisFormat(ImAxis_Y1, "%.f");
 		ImPlot::SetupAxisTicks(ImAxis_X1, boundsMin.x, boundsMax.x, graph.size());
@@ -61,8 +63,8 @@ void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, co
 	delete[] heatmapValues;
 }
 
-template<class ValueType, class WeightType = int>
-void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
+template<class Value, class Weight = int>
+void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const Value&, const int&)>& GetNodeInfo) {
 	
 	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
 
