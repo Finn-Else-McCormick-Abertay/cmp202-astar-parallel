@@ -30,6 +30,9 @@ void imguiUpdate(int width, int height) {
 
 	g_pathfindingSettings.imguiDrawControlGroup();
 	g_graphEdit.imguiDisplayGraph();
+
+	auto [pathStart, pathEnd] = g_pathfindingSettings.getIndices();
+	DisplayGraph<Vec2, float>(Singleton::graph(), Singleton::path(), { pathStart, pathEnd }, GetNodeInfoFunc<Vec2>(GraphEdit::getNodeInfo));
 }
 
 int main() {

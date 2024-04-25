@@ -24,6 +24,7 @@ public:
 	void setAlgorithm(int);
 	void setHeuristic(int);
 
+	std::pair<int, int> getIndices() const;
 	void setIndices(int, int);
 
 	const PathfindingAlgorithm<Vec2, float>& getCurrentAlgorithm() const;

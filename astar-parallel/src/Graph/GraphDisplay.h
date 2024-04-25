@@ -8,6 +8,7 @@
 #include <string>
 #include "../Maths/Vec2.h"
 #include <numbers>
+#include <set>
 
 #include "DirectedGraph.h"
 
@@ -64,7 +65,7 @@ void DisplayAdjacencyTable(const DirectedGraph<Value, Weight>& graph, const std:
 }
 
 template<class Value, class Weight = int>
-void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const Value&, const int&)>& GetNodeInfo) {
+void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<int>& path, const std::set<int>& highlight, const std::function<NodeDisplayInfo(const Value&, const int&)>& GetNodeInfo) {
 	
 	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
 
@@ -74,6 +75,7 @@ void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<i
 
 	ImColor color_labels = ImColor(1.f, 1.f, 1.f, 1.f);
 	ImColor color_points = ImColor(0.5f, 0.5f, 0.5f, 1.f);
+	ImColor color_highlight = ImColor(1.f, 1.f, 0.f, 1.f);
 	ImColor color_lines_base = ImColor(0.7f, 0.7f, 0.7f, 1.f);
 	ImColor color_lines_path = ImColor(1.f, 0.2f, 0.2f, 1.f);
 
@@ -82,6 +84,7 @@ void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<i
 	float lineThickness = 1.5f; float pointSize = 8.f;
 	float pathLineThickness = 2.5f; float pathPointSize = 10.f;
 	float arrowSize = 6.f; float pathArrowSize = 7.5f;
+	float highlightThickness = 3.f;
 
 	auto drawArrow = [arrowLinePosition, arrowSize](ImVec2 start, ImVec2 end, ImColor color, float size) {
 		Vec2 startPoint = Vec2(ImPlot::PlotToPixels(start.x, start.y)), endPoint = Vec2(ImPlot::PlotToPixels(end.x, end.y));
@@ -135,7 +138,7 @@ void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<i
 
 				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, pointSize, color_points);
 				ImPlot::SetNextLineStyle(color_lines_base, lineThickness);
-				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
+				ImPlot::PlotLine("##BaseLine", xs, ys, 2);
 
 				drawArrow(startInfo.pos, endInfo.pos, color_lines_base, arrowSize);
 			}
@@ -153,10 +156,19 @@ void DisplayGraph(const DirectedGraph<Value, Weight>& graph, const std::vector<i
 
 				ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, pathPointSize, color_lines_path);
 				ImPlot::SetNextLineStyle(color_lines_path, pathLineThickness);
-				ImPlot::PlotLine("##GraphLine", xs, ys, 2);
+				ImPlot::PlotLine("##PathLine", xs, ys, 2);
 
 				drawArrow(startInfo.pos, endInfo.pos, color_lines_path, pathArrowSize);
 			}
+		}
+		for (auto& index : highlight) {
+			auto& nodeInfo = info[index];
+
+			float xs[1] = { nodeInfo.pos.x };
+			float ys[1] = { nodeInfo.pos.y };
+
+			ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle, pointSize + highlightThickness / 2, ImColor(0.f,0.f,0.f,0.f), highlightThickness, color_highlight);
+			ImPlot::PlotLine("##HighlightPoint", xs, ys, 1);
 		}
 
 		ImVec2 textOffset{1, 0};

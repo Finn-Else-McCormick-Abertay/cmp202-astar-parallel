@@ -22,6 +22,8 @@ public:
 	void loadGraph(std::string path);
 	void generateGraph();
 
+	static NodeDisplayInfo getNodeInfo(const Vec2& val, const int& index);
+
 private:
 	bool m_showEditWindow = false;
 
@@ -51,6 +53,4 @@ private:
 
 	std::vector<std::pair<Heuristic<Vec2,float>, std::string>> m_heuristics;
 	int m_heuristicIndex = 0;
-
-	static NodeDisplayInfo getNodeInfo(const Vec2& val, const int& index);
 };

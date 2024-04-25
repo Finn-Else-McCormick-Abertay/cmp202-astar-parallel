@@ -12,6 +12,8 @@
 
 #include "../Window/Window.h"
 
+#include <random>
+
 PathfindingSettings::PathfindingSettings() {
 	m_algorithms.emplace_back(aStarSequential<Vec2, float>, "A* Sequential");
 	m_algorithms.emplace_back(hashDistributedAStarSharedMemory<Vec2, float>, "HDA* Parallel Shared Memory");
@@ -94,6 +96,7 @@ void PathfindingSettings::checkOnProfiling() {
 void PathfindingSettings::setAlgorithm(int v) { m_algorithmIndex = v; }
 void PathfindingSettings::setHeuristic(int v) { m_heuristicIndex = v; }
 
+std::pair<int, int> PathfindingSettings::getIndices() const { return std::make_pair(m_startIndex, m_goalIndex); }
 void PathfindingSettings::setIndices(int start, int goal) { m_startIndex = start; m_goalIndex = goal; }
 
 void PathfindingSettings::addMenuBarItem() {
@@ -201,6 +204,15 @@ void PathfindingSettings::imguiDrawControlGroup() {
 		else {
 			m_groupMessage.setMessage("Invalid index", true);
 		}
+	}
+	ImGui::SameLine(); ImGui::Text(" "); ImGui::SameLine();
+	if (ImGui::Button("Random", ImVec2(100, 20))) {
+		std::random_device rd;  // Will be used to obtain a seed for the random number engine
+		std::mt19937 gen(rd()); // Standard mersenne_twister_engine seeded with rd()
+		std::uniform_int_distribution dist(0, (int)Singleton::graph().size() - 1);
+		
+		m_startIndex = dist(gen);
+		do { m_goalIndex = dist(gen); } while (m_goalIndex == m_startIndex);
 	}
 	ImGui::SameLine(); ImGui::Text(" "); ImGui::SameLine();
 	if (ImGui::Button("Find Path", ImVec2(100, 20))) {

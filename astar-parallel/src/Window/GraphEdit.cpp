@@ -275,5 +275,5 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 }
 
 void GraphEdit::imguiDisplayGraph() {
-	DisplayGraph<Vec2, float>(Singleton::graph(), Singleton::path(), GetNodeInfoFunc<Vec2>(getNodeInfo));
+	
 }
