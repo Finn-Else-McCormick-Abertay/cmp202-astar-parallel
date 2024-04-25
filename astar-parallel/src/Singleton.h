@@ -2,7 +2,7 @@
 #include "Graph/DirectedGraph.h"
 #include "Maths/Vec2.h"
 #include "Pathfinding/Prototypes.h"
-#include <iostream>
+#include <string>
 
 class Singleton
 {
@@ -14,15 +14,7 @@ public:
 
 	static bool& currentlyProfiling();
 
-	template<typename ...Args>
-	inline static void consoleOutput(Args... args) {
-		(std::cout << ... << args) << std::endl;
-	}
-	inline static void consoleOutput() {
-		std::cout << std::endl;
-	}
-
-	inline static std::ostream& getConsole() { return std::cout; }
+	static void consoleOutput(const std::string&);
 
 private:
 	Singleton() = default;

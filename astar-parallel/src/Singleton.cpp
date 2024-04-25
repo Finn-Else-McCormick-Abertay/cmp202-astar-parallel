@@ -1,6 +1,7 @@
 #include "Singleton.h"
 
 #include <memory>
+#include <iostream>
 
 Singleton& Singleton::GetInstance() {
 	static std::unique_ptr<Singleton> ptr(new Singleton);
@@ -29,4 +30,9 @@ void Singleton::recalculateEdgeWeights() {
 			g.setEdgeWeight(i, j, (pos2 - pos1).length());
 		}
 	}
+}
+
+
+void Singleton::consoleOutput(const std::string& msg) {
+	std::cout << msg << std::endl;
 }

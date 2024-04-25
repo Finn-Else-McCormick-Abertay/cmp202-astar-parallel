@@ -87,6 +87,11 @@ void Window::onResized(GLFWwindow* window, int width, int height) {
 	render();
 }
 
+void Window::requestRedrawThreadsafe() {
+	// This doesn't need anything fancy we just to need to post an event so glfwWaitEvents will stop blocking
+	glfwPostEmptyEvent();
+}
+
 void Window::enterLoop() {
 	while (!glfwWindowShouldClose(singleton().m_window)) {
 		glfwWaitEvents();

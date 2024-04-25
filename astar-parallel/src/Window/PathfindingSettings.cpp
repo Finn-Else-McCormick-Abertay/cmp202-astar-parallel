@@ -7,13 +7,16 @@
 #include "../Pathfinding/HDAStar.h"
 #include "../Pathfinding/Heuristics.h"
 
-#include "../Pathfinding/PathStreamOp.h"
+#include "../StringUtil.h"
+#include "../Pathfinding/PathStream.h"
+
+#include "../Window/Window.h"
 
 PathfindingSettings::PathfindingSettings() {
 	m_algorithms.emplace_back(aStarSequential<Vec2, float>, "A* Sequential");
 	m_algorithms.emplace_back(hashDistributedAStarSharedMemory<Vec2, float>, "HDA* Parallel Shared Memory");
 
-	m_heuristics.emplace_back(straightLineDistance, "Straight Line Distance");
+	m_heuristics.emplace_back(euclideanDistance, "Euclidean Distance");
 	m_heuristics.emplace_back(manhattanDistance, "Manhattan Distance");
 }
 
@@ -23,59 +26,67 @@ const Heuristic<Vec2, float>& PathfindingSettings::getCurrentHeuristic() const {
 bool PathfindingSettings::findPath() {
 	Singleton::path() = getCurrentAlgorithm()(Singleton::graph(), m_startIndex, m_goalIndex, getCurrentHeuristic());
 	if (Singleton::path().size() > 0) {
-		Singleton::consoleOutput("Found path of length ", Singleton::path().size(), " from node ", m_startIndex, " to node ", m_goalIndex,
-			" using ", m_algorithms.at(m_algorithmIndex).second, " with heuristic ", m_heuristics.at(m_heuristicIndex).second, ".");
-		pathOutput(Singleton::getConsole(), Singleton::path(), Singleton::graph(), "\n");
-		Singleton::consoleOutput();
+		Singleton::consoleOutput(stringOut("Found path of length ", Singleton::path().size(), " from node ", m_startIndex, " to node ", m_goalIndex,
+			" using ", m_algorithms.at(m_algorithmIndex).second, " with heuristic ", m_heuristics.at(m_heuristicIndex).second, "."));
+		Singleton::consoleOutput(pathOut(Singleton::path(), Singleton::graph(), "\n") + '\n');
+		Singleton::consoleOutput("");
 		return true;
 	}
 	else {
-		Singleton::consoleOutput("No path could be found between nodes ", m_startIndex, " and ", m_goalIndex,
-			" using ", m_algorithms.at(m_algorithmIndex).second, " with heuristic ", m_heuristics.at(m_heuristicIndex).second, ".");
+		Singleton::consoleOutput(stringOut("No path could be found between nodes ", m_startIndex, " and ", m_goalIndex,
+			" using ", m_algorithms.at(m_algorithmIndex).second, " with heuristic ", m_heuristics.at(m_heuristicIndex).second, "."));
 		return false;
 	}
 }
 
 void PathfindingSettings::startProfiling() {
 	m_profilerMessage.clear();
+	Singleton::currentlyProfiling() = true;
+	Singleton::consoleOutput(stringOut("Beginning ", (m_profilerBlocking ? "blocking" : "non-blocking"), " profiling session with ", m_profilerIterations, " iterations."));
+	Singleton::consoleOutput(stringOut("Algorithm: ", m_algorithms.at(m_algorithmIndex).second));
+	Singleton::consoleOutput(stringOut("Heuristic: ", m_heuristics.at(m_heuristicIndex).second));
 	if (m_profilerBlocking) {
 		m_profiler = std::make_unique<ProfilerBlocking>(m_profilerIterations);
-		Singleton::consoleOutput("Beginning blocking profiling session with ", m_profilerIterations, " iterations.");
-		Singleton::consoleOutput("Algorithm: ", m_algorithms.at(m_algorithmIndex).second);
-		Singleton::consoleOutput("Heuristic: ", m_heuristics.at(m_heuristicIndex).second);
 		((ProfilerBlocking*)m_profiler.get())->performProfiling(getCurrentAlgorithm(), Singleton::graph(), m_startIndex, m_goalIndex, getCurrentHeuristic());
 		finalProfilerMessage();
 	}
 	else {
 		m_profiler = std::make_unique<ProfilerNonBlocking>(m_profilerIterations);
-		Singleton::currentlyProfiling() = true;
-		Singleton::consoleOutput("Beginning non-blocking profiling session with ", m_profilerIterations, " iterations.");
-		Singleton::consoleOutput("Algorithm: ", m_algorithms.at(m_algorithmIndex).second);
-		Singleton::consoleOutput("Heuristic: ", m_heuristics.at(m_heuristicIndex).second);
 		((ProfilerNonBlocking*)m_profiler.get())->startProfiling(getCurrentAlgorithm(), std::cref(Singleton::graph()), m_startIndex, m_goalIndex, getCurrentHeuristic());
 	}
 }
 
 void PathfindingSettings::finalProfilerMessage() {
+	Singleton::currentlyProfiling() = false;
 	m_profilerMessage.setMessage("Profiling complete.");
 	Singleton::consoleOutput("Profiling complete.");
 	Singleton::consoleOutput("Results:");
 	auto timeStats = m_profiler->timingResults();
 	for (auto& time : timeStats.times()) {
-		Singleton::consoleOutput(time.asSecondsFull(), " seconds / ", time);
+		Singleton::consoleOutput(stringOut(time.asSecondsFull(), " seconds / ", time));
 	}
-	Singleton::consoleOutput();
-	Singleton::consoleOutput("Median: ", timeStats.median());
-	Singleton::consoleOutput("Mean: ", timeStats.mean());
-	Singleton::consoleOutput("Standard Deviation: ", timeStats.standardDeviation());
+	Singleton::consoleOutput("");
+	Singleton::consoleOutput(stringOut("Median: ", timeStats.median()));
+	Singleton::consoleOutput(stringOut("Mean: ", timeStats.mean()));
+	Singleton::consoleOutput(stringOut("Standard Deviation: ", timeStats.standardDeviation()));
 }
 
 void PathfindingSettings::checkOnProfiling() {
 	if (!Singleton::currentlyProfiling() || !m_profiler || m_profilerBlocking) { return; }
 
-	if (((ProfilerNonBlocking*)m_profiler.get())->isFinished()) {
-		Singleton::currentlyProfiling() = false;
+	ProfilerNonBlocking* ptr = (ProfilerNonBlocking*)m_profiler.get();
+
+	if (ptr->isFinished()) {
 		finalProfilerMessage();
+		// Have to request one more time or it won't show the final message until an input event is recieved
+		Window::requestRedrawThreadsafe();
+	}
+	else {
+		int jobsCompleted = ptr->jobsCompleted();
+		double percentage = (static_cast<double>(jobsCompleted) / static_cast<double>(m_profilerIterations)) * 100;
+		int percentageRounded = static_cast<int>(round(percentage));
+
+		m_profilerMessage.setMessage(stringOut("Completed ", percentageRounded, "% (", jobsCompleted, "/", m_profilerIterations, ")"));
 	}
 }
 
@@ -150,7 +161,7 @@ void PathfindingSettings::imguiDrawWindow(int width, int height) {
 	}
 
 	if (m_showProfilingDialog) {
-		float popupWidth = 300, popupHeight = 140;
+		float popupWidth = 300, popupHeight = 120;
 		ImGui::SetNextWindowPos({ width / 2.f - popupWidth / 2.f, height / 2.f - popupHeight / 2.f }, ImGuiCond_Once);
 		ImGui::SetNextWindowSize(ImVec2(popupWidth, popupHeight), ImGuiCond_Once);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.f);

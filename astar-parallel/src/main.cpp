@@ -33,9 +33,8 @@ void imguiUpdate(int width, int height) {
 }
 
 int main() {
-	g_graphEdit.generateGraph();
-
 	if (Window::init(imguiUpdate, imguiTitlebar, 1200, 800)) {
+		g_graphEdit.generateGraph();
 		Window::enterLoop();
 	}
 }	

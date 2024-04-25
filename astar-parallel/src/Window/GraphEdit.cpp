@@ -3,6 +3,7 @@
 
 #include "../Singleton.h"
 #include <string>
+#include "../StringUtil.h"
 
 #include "../Graph/GraphJSON.h"
 
@@ -12,14 +13,14 @@
 #include "../Pathfinding/Heuristics.h"
 
 GraphEdit::GraphEdit() {
-	m_heuristics.emplace_back(straightLineDistance, "Straight Line Distance");
+	m_heuristics.emplace_back(euclideanDistance, "Euclidean Distance");
 	m_heuristics.emplace_back(manhattanDistance, "Manhattan Distance");
 }
 
 void GraphEdit::saveGraph(std::string path) {
 	auto resultingPath = saveToFile(Singleton::graph(), path);
 	m_saveLoadMessage.setMessage("Saved to " + resultingPath.generic_string());
-	Singleton::consoleOutput("Saved graph to file at local path ", resultingPath);
+	Singleton::consoleOutput(stringOut("Saved graph to file at local path ", resultingPath));
 }
 
 void GraphEdit::loadGraph(std::string path) {
@@ -28,7 +29,7 @@ void GraphEdit::loadGraph(std::string path) {
 		Singleton::graph() = loadedGraph;
 		Singleton::path() = Path();
 		m_saveLoadMessage.setMessage("Loaded from " + resultingPath.generic_string());
-		Singleton::consoleOutput("Loaded graph from file at local path ", resultingPath);
+		Singleton::consoleOutput(stringOut("Loaded graph from file at local path ", resultingPath));
 	}
 	else { m_saveLoadMessage.setMessage("No such file " + resultingPath.generic_string(), true); }
 }
@@ -39,8 +40,8 @@ void GraphEdit::generateGraph() {
 		m_heuristics[m_heuristicIndex].first, m_generate_doubleEdged);
 	Singleton::recalculateEdgeWeights();
 	Singleton::path() = Path();
-	Singleton::consoleOutput("Generated ", (m_generate_doubleEdged ? " double-edged " : ""), "k-nearest graph with size=",
-		m_generate_numNodes, " and k=", m_generate_k, " using heuristic ", m_heuristics.at(m_heuristicIndex).second, ".");
+	Singleton::consoleOutput(stringOut("Generated ", (m_generate_doubleEdged ? " double-edged " : ""), "k-nearest graph with size=",
+		m_generate_numNodes, " and k=", m_generate_k, " using heuristic ", m_heuristics.at(m_heuristicIndex).second, "."));
 }
 
 void GraphEdit::addMenuBarItem() {
@@ -178,7 +179,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 					graph.setValue(m_setNode_index, Vec2(m_setNode_inputPosition[0], m_setNode_inputPosition[1]));
 					Singleton::recalculateEdgeWeights();
 					Singleton::path().clear();
-					m_setNode_message.setMessage("Set position of node " + std::to_string(m_setNode_index));
+					m_setNode_message.setMessage(stringOut("Set position of node ", m_setNode_index));
 				}
 				else {
 					m_setNode_message.setMessage("Invalid index, could not set", true);
@@ -189,7 +190,7 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 				graph.createNode(Vec2(m_setNode_inputPosition[0], m_setNode_inputPosition[1]));
 				m_setNode_index = graph.size() - 1;
 				Singleton::path().clear();
-				m_setNode_message.setMessage("Added node at index " + std::to_string(m_setNode_index));
+				m_setNode_message.setMessage(stringOut("Added node at index ", m_setNode_index));
 			}
 			m_setNode_message.draw();
 		}
@@ -214,12 +215,10 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 						Singleton::recalculateEdgeWeights();
 						Singleton::path().clear();
 						if (m_setEdge_doubleEdge) {
-							m_setEdge_message.setMessage("Created edges between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
+							m_setEdge_message.setMessage(stringOut("Created edges between nodes ", m_setEdge_startIndex, " and ", m_setEdge_endIndex));
 						}
 						else {
-							m_setEdge_message.setMessage("Created directed edge between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
+							m_setEdge_message.setMessage(stringOut("Created directed edge between nodes ", m_setEdge_startIndex, " and ", m_setEdge_endIndex));
 						}
 					}
 					else { m_setEdge_message.setMessage("Start and end indicies are the same", true); }
@@ -234,12 +233,10 @@ void GraphEdit::imguiDrawWindow(int width, int height) {
 						graph.removeEdge(m_setEdge_startIndex, m_setEdge_endIndex, m_setEdge_doubleEdge);
 						Singleton::path().clear();
 						if (m_setEdge_doubleEdge) {
-							m_setEdge_message.setMessage("Removed edges between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
+							m_setEdge_message.setMessage(stringOut("Removed edges between nodes ", m_setEdge_startIndex, " and ", m_setEdge_endIndex));
 						}
 						else {
-							m_setEdge_message.setMessage("Removed directed edge between nodes "
-								+ std::to_string(m_setEdge_startIndex) + " and " + std::to_string(m_setEdge_endIndex));
+							m_setEdge_message.setMessage(stringOut("Removed directed edge between nodes ", m_setEdge_startIndex, " and ", m_setEdge_endIndex));
 						}
 					}
 					else { m_setEdge_message.setMessage("Start and end indicies are the same", true); }

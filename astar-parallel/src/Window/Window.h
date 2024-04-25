@@ -18,6 +18,8 @@ public:
 	static void render();
 	static void onResized(GLFWwindow* window, int width, int height);
 
+	static void requestRedrawThreadsafe();
+
 private:
 	static Window& singleton();
 

@@ -17,3 +17,7 @@ bool ProfilerNonBlocking::isFinished() {
 	}
 	return false;
 }
+
+int ProfilerNonBlocking::jobsCompleted() const {
+	return m_timingResults.size();
+}

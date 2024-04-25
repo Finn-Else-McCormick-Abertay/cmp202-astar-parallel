@@ -101,7 +101,9 @@
     <ClInclude Include="src\Pathfinding\Prototypes.h" />
     <ClInclude Include="src\Pathfinding\Heuristics.h" />
     <ClInclude Include="src\Window\ImGuiUtil.h" />
-    <ClInclude Include="src\Pathfinding\PathStreamOp.h" />
+    <ClInclude Include="src\Pathfinding\PathStream.h" />
     <ClInclude Include="src\Profiling\TimeStatistics.h" />
+    <ClInclude Include="src\StringUtil.h" />
+    <ClInclude Include="src\Pathfinding\MutexProtectedWrapper.h" />
   </ItemGroup>
 </Project>

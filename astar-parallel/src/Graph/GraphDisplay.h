@@ -1,6 +1,7 @@
 #pragma once
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <extensions/implot/implot.h>
 
 #include <functional>
@@ -26,29 +27,34 @@ void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, co
 		info[i] = GetNodeInfo(graph.at(i).value(), i);
 	}
 
-	if (ImGui::BeginTable("##adjacencyMatrix", graph.size() + 1)) {
-		ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
-		for (int i = 0; i < graph.size(); ++i) {
-			auto& nodeInfo = info[i];
-			ImGui::TableSetupColumn(nodeInfo.name.c_str(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
-		}
-		ImGui::TableHeadersRow();
+	if (graph.size() + 1 > IMGUI_TABLE_MAX_COLUMNS) {
+		ImGui::Text("Max columns exceeded. Table could not be displayed.");
+	}
+	else {
+		if (ImGui::BeginTable("##adjacencyMatrix", graph.size() + 1)) {
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
+			for (int i = 0; i < graph.size(); ++i) {
+				auto& nodeInfo = info[i];
+				ImGui::TableSetupColumn(nodeInfo.name.c_str(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
+			}
+			ImGui::TableHeadersRow();
 
-		for (int row = 0; row < graph.size(); ++row) {
-			auto& rowAdjacencyMap = graph.at(row).adjacencyMap();
-			auto& rowInfo = info[row];
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0);
-			ImGui::TableHeader(rowInfo.name.c_str());
-			for (int column = 0; column < graph.size(); ++column) {
-				ImGui::TableSetColumnIndex(column + 1);
-				if (rowAdjacencyMap.contains(column)) {
-					WeightType weight = rowAdjacencyMap.at(column);
-					ImGui::Text("%s", std::to_string(weight).c_str());
+			for (int row = 0; row < graph.size(); ++row) {
+				auto& rowAdjacencyMap = graph.at(row).adjacencyMap();
+				auto& rowInfo = info[row];
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0);
+				ImGui::TableHeader(rowInfo.name.c_str());
+				for (int column = 0; column < graph.size(); ++column) {
+					ImGui::TableSetColumnIndex(column + 1);
+					if (rowAdjacencyMap.contains(column)) {
+						WeightType weight = rowAdjacencyMap.at(column);
+						ImGui::Text("%s", std::to_string(weight).c_str());
+					}
 				}
 			}
+			ImGui::EndTable();
 		}
-		ImGui::EndTable();
 	}
 
 	delete[] info;

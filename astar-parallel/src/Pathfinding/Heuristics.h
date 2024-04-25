@@ -4,5 +4,5 @@
 
 #include "Prototypes.h"
 
-float straightLineDistance(const Vec2&, const Vec2&);
+float euclideanDistance(const Vec2&, const Vec2&);
 float manhattanDistance(const Vec2&, const Vec2&);

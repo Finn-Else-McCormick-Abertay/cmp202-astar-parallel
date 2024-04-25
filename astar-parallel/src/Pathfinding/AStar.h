@@ -8,26 +8,31 @@
 #include <limits>
 #include "Prototypes.h"
 
-template<class ValueType, class WeightType>
-Path aStarSequential(const DirectedGraph<ValueType,WeightType>& graph, int start, int goal, const Heuristic<ValueType,WeightType>& heuristicFunc) {
+template<class Value, class Weight>
+Path aStarSequential(const DirectedGraph<Value,Weight>& graph, int start, int goal, const Heuristic<Value,Weight>& heuristicFunc) {
 	if (graph.size() == 0) { return Path(); }
 
 	// Shorthand for calling heuristic at a given index
 	auto h = [&](int index) { return heuristicFunc(graph.at(index).value(), graph.at(goal).value()); };
 
-	std::vector<WeightType> g, f; std::vector<int> cameFrom;
-	g.reserve(graph.size()); f.reserve(graph.size()); cameFrom.reserve(graph.size());
-	// Init g and f values to max value so new values will always be less
+	// Vectors initialised to the same size as the graph so they can be easily indexed
+	std::vector<Weight> costFromStart, estimatedTotalCost;
+	std::vector<int> parentIndex;
+	costFromStart.reserve(graph.size()); estimatedTotalCost.reserve(graph.size()); parentIndex.reserve(graph.size());
 	for (int i = 0; i < graph.size(); ++i) {
-		g.push_back(std::numeric_limits<WeightType>::max());
-		f.push_back(std::numeric_limits<WeightType>::max());
-		cameFrom.push_back(-1);
+		// Init g and f values to max value so new values will always be less
+		costFromStart.push_back(std::numeric_limits<Weight>::max());
+		estimatedTotalCost.push_back(std::numeric_limits<Weight>::max());
+		parentIndex.push_back(-1);
 	}
-	g[start] = 0; f[start] = h(start);
+	// Set weight at start index to zero
+	costFromStart[start] = 0; estimatedTotalCost[start] = h(start);
 
 	// Open set is represented by a priority queue ordered by lowest f score of index
-	auto f_compare = [&f](const int& lhs, const int& rhs) { return f.at(lhs) > f.at(rhs); };
-	std::priority_queue<int, std::vector<int>, decltype(f_compare)> openSet(f_compare);
+	auto greaterEstimatedCost = [&estimatedTotalCost](const int& lhs, const int& rhs) { return estimatedTotalCost.at(lhs) > estimatedTotalCost.at(rhs); };
+	std::priority_queue<int, std::vector<int>, decltype(greaterEstimatedCost)> openSet(greaterEstimatedCost);
+
+	// Push start index
 	openSet.push(start);
 
 	while (!openSet.empty()) {
@@ -40,7 +45,7 @@ Path aStarSequential(const DirectedGraph<ValueType,WeightType>& graph, int start
 			Path path; path.push_back(current);
 			int prev = current;
 			while (prev != start) {
-				prev = cameFrom.at(prev);
+				prev = parentIndex.at(prev);
 				path.push_back(prev);
 			}
 			// Reverse so that it runs from start to goal
@@ -50,21 +55,26 @@ Path aStarSequential(const DirectedGraph<ValueType,WeightType>& graph, int start
 
 		// Remove current from open set
 		openSet.pop();
-		const std::map<int, WeightType>& adjacencyMap = graph.at(current).adjacencyMap();
 
 		// For each neighbour of current
-		for (auto& [neighbour, weight] : adjacencyMap) {
-			WeightType neighbour_g_tentative = g.at(current) + weight;
+		const std::map<int, Weight>& adjacencyMap = graph.at(current).adjacencyMap();
 
-			if (neighbour_g_tentative < g.at(neighbour)) {
-				cameFrom[neighbour] = current;
-				g[neighbour] = neighbour_g_tentative;
-				f[neighbour] = neighbour_g_tentative + h(neighbour);
+		for (auto& [neighbour, edgeWeight] : adjacencyMap) {
+			Weight tentativeNeighbourCost = costFromStart.at(current) + edgeWeight;
+
+			if (tentativeNeighbourCost < costFromStart.at(neighbour)) {
+				parentIndex[neighbour] = current;
+
+				// Update cost
+				costFromStart[neighbour] = tentativeNeighbourCost;
+				estimatedTotalCost[neighbour] = tentativeNeighbourCost + h(neighbour);
+
+				// Push neighbour to open set
 				openSet.push(neighbour);
 			}
 		}
 	}
 
-	// Failure
+	// Fail state
 	return Path();
 }

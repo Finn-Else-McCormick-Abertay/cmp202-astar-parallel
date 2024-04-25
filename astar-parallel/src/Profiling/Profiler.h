@@ -8,13 +8,14 @@
 #include "Timer.h"
 #include "TimeStatistics.h"
 
+#include "../Window/Window.h"
+
 class Profiler
 {
-private:
+protected:
 	int m_numIterations;
 	std::vector<TimeCompound> m_timingResults;
 
-protected:
 	Profiler(int numIterations);
 
 	template <typename R, typename ...A, typename ...PassedArgs>
@@ -31,6 +32,9 @@ protected:
 			func(args...);
 			timer.stop();
 			m_timingResults.emplace_back(timer.elapsedTime());
+
+			// Request redraw between iterations so output works
+			Window::requestRedrawThreadsafe();
 		}
 	}
 
@@ -78,4 +82,5 @@ public:
 	}
 
 	bool isFinished();
+	int jobsCompleted() const;
 };
