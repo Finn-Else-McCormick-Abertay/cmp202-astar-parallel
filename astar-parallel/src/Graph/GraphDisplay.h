@@ -11,6 +11,9 @@
 
 #include "DirectedGraph.h"
 
+#include "../Singleton.h"
+#include "../StringUtil.h"
+
 struct NodeDisplayInfo
 {
 	std::string name; ImVec2 pos;
@@ -21,43 +24,41 @@ struct NodeDisplayInfo
 template<class ValueType, class WeightType = int>
 void DisplayAdjacencyTable(const DirectedGraph<ValueType, WeightType>& graph, const std::vector<int>& path, const std::function<NodeDisplayInfo(const ValueType&, const int&)>& GetNodeInfo) {
 
-	NodeDisplayInfo* info = new NodeDisplayInfo[graph.size()];
+	int* heatmapValues = new int[graph.size() * graph.size()];
+	for (int i = 0; i < graph.size(); ++i) { for (int j = 0; j < graph.size(); ++j) { heatmapValues[i + j * graph.size()] = 0; } }
 
 	for (int i = 0; i < graph.size(); ++i) {
-		info[i] = GetNodeInfo(graph.at(i).value(), i);
-	}
-
-	if (graph.size() + 1 > IMGUI_TABLE_MAX_COLUMNS) {
-		ImGui::Text("Max columns exceeded. Table could not be displayed.");
-	}
-	else {
-		if (ImGui::BeginTable("##adjacencyMatrix", graph.size() + 1)) {
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
-			for (int i = 0; i < graph.size(); ++i) {
-				auto& nodeInfo = info[i];
-				ImGui::TableSetupColumn(nodeInfo.name.c_str(), ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoSort);
-			}
-			ImGui::TableHeadersRow();
-
-			for (int row = 0; row < graph.size(); ++row) {
-				auto& rowAdjacencyMap = graph.at(row).adjacencyMap();
-				auto& rowInfo = info[row];
-				ImGui::TableNextRow();
-				ImGui::TableSetColumnIndex(0);
-				ImGui::TableHeader(rowInfo.name.c_str());
-				for (int column = 0; column < graph.size(); ++column) {
-					ImGui::TableSetColumnIndex(column + 1);
-					if (rowAdjacencyMap.contains(column)) {
-						WeightType weight = rowAdjacencyMap.at(column);
-						ImGui::Text("%s", std::to_string(weight).c_str());
-					}
-				}
-			}
-			ImGui::EndTable();
+		NodeDisplayInfo info = GetNodeInfo(graph.at(i).value(), i);
+		auto adjacencyMap = graph.at(i).adjacencyMap();
+		for (auto& [neighbour, edgeWeight] : adjacencyMap) {
+			// Round and store as an integer as this displays better in printf formatting
+			// (both in that it's shorter and in that it lets us display nothing for zeros)
+			heatmapValues[(graph.size() - 1 - i) * graph.size() + neighbour] = static_cast<int>(round(edgeWeight));
 		}
 	}
 
-	delete[] info;
+
+	static ImU32 colormapValues[] = { ImColor(1.f,1.f,1.f), ImColor(0.5f,0.5f,0.5f) };
+	static ImPlotColormap colormap = ImPlot::AddColormap("##adjacencyColormap", colormapValues, IM_ARRAYSIZE(colormapValues), false);
+
+	ImPlot::PushColormap(colormap);
+	
+	if (ImPlot::BeginPlot("##adjacencyMatrix", ImVec2(-1, 0), ImPlotFlags_NoLegend | ImPlotFlags_NoMouseText | ImPlotFlags_NoFrame)) {
+		ImPlotAxisFlags axisFlags = ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoGridLines | ImPlotAxisFlags_NoHighlight;
+		ImPlot::SetupAxes(NULL,NULL, axisFlags | ImPlotAxisFlags_Opposite, axisFlags | ImPlotAxisFlags_Invert);
+		ImPlotPoint boundsMin = ImPlotPoint(0, 0), boundsMax = ImPlotPoint(graph.size(), graph.size());
+		ImPlot::SetupAxesLimits(boundsMin.x, boundsMax.x, boundsMin.y, boundsMax.y);
+		ImPlot::SetupAxisFormat(ImAxis_X1, "%.f");
+		ImPlot::SetupAxisFormat(ImAxis_Y1, "%.f");
+		ImPlot::SetupAxisTicks(ImAxis_X1, boundsMin.x, boundsMax.x, graph.size());
+		ImPlot::SetupAxisTicks(ImAxis_Y1, boundsMin.y, boundsMax.y, graph.size());
+		ImPlot::PlotHeatmap("##adjHeatmap", heatmapValues, graph.size(), graph.size(), 0.f, 100.f, "%.i", boundsMin, boundsMax);
+		ImPlot::EndPlot();
+	}
+
+	ImPlot::PopColormap();
+
+	delete[] heatmapValues;
 }
 
 template<class ValueType, class WeightType = int>
@@ -97,17 +98,25 @@ void DisplayGraph(const DirectedGraph<ValueType, WeightType>& graph, const std::
 				v.x * cosA - v.y * sinA,
 				v.x * sinA + v.y * cosA
 			);
-			};
+		};
 
 		Vec2 arrow_p1 = drawPoint + rotate(Vec2(size / 2.f, size / 2.f), lineHeadingAngle);
 		Vec2 arrow_p2 = drawPoint + rotate(Vec2(0.f, -size), lineHeadingAngle);
 		Vec2 arrow_p3 = drawPoint + rotate(Vec2(-size / 2.f, size / 2.f), lineHeadingAngle);
 
-		ImDrawList* drawList = ImPlot::GetPlotDrawList();
-		drawList->AddTriangleFilled(arrow_p1.asImVec2(), arrow_p2.asImVec2(), arrow_p3.asImVec2(), color);
+		ImVec2 plotOrigin = ImPlot::GetPlotPos();
+		ImVec2 plotSize = ImPlot::GetPlotSize();
+		auto withinLimits = [&plotOrigin, &plotSize](const Vec2& p) {
+			return (p.x > plotOrigin.x) && (p.x < (plotOrigin.x + plotSize.x)) && (p.y > plotOrigin.y) && (p.y < (plotOrigin.y + plotSize.y));
 		};
 
-	if (ImPlot::BeginPlot("##Graph", ImVec2(-1, -1), ImPlotFlags_NoFrame)) {
+		if (withinLimits(arrow_p1) && withinLimits(arrow_p2) && withinLimits(arrow_p3)) {
+			ImDrawList* drawList = ImPlot::GetPlotDrawList();
+			drawList->AddTriangleFilled(arrow_p1.asImVec2(), arrow_p2.asImVec2(), arrow_p3.asImVec2(), color);
+		}
+	};
+
+	if (ImPlot::BeginPlot("##GraphDisplayMain", ImVec2(-1, -1), ImPlotFlags_NoFrame)) {
 
 		ImPlot::SetupAxes(NULL, NULL, 0, 0);
 		ImPlot::SetupAxesLimits(-100, 100, -100, 100);
