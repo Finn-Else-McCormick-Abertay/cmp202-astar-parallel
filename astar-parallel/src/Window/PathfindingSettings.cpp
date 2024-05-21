@@ -68,9 +68,9 @@ void PathfindingSettings::finalProfilerMessage() {
 		Singleton::consoleOutput(stringOut(time.asSecondsFull(), " seconds / ", time));
 	}
 	Singleton::consoleOutput("");
-	Singleton::consoleOutput(stringOut("Median: ", timeStats.median()));
-	Singleton::consoleOutput(stringOut("Mean: ", timeStats.mean()));
-	Singleton::consoleOutput(stringOut("Standard Deviation: ", timeStats.standardDeviation()));
+	Singleton::consoleOutput(stringOut("Median: ", timeStats.median(), " / ", timeStats.median().asSecondsFull(), " seconds"));
+	Singleton::consoleOutput(stringOut("Mean: ", timeStats.mean(), " / ", timeStats.mean().asSecondsFull(), " seconds"));
+	Singleton::consoleOutput(stringOut("Standard Deviation: ", timeStats.standardDeviation(), " / ", timeStats.standardDeviation().asSecondsFull(), " seconds"));
 }
 
 void PathfindingSettings::checkOnProfiling() {
